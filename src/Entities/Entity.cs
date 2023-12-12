@@ -162,7 +162,10 @@ namespace Ignite.Entities
         /// <param name="type">Type of the component.</param>
         /// <returns>Whether the entity has a component of type <paramref name="type"/>.</returns>
         public bool HasComponent(Type type)
-            => HasComponent(GetComponentIndex(type));
+        {
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
+            return HasComponent(GetComponentIndex(type));
+        }
 
         /// <summary>
         /// Check whether the entity has a component from it's <paramref name="index"/>
@@ -231,6 +234,8 @@ namespace Ignite.Entities
         /// <returns>A component with instantiation type of <paramref name="type"/></returns>
         public IComponent GetComponent(Type type)
         {
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
+
             int index = GetComponentIndex(type);
             Debug.Assert(HasComponent(index), $"The entity doesn't have a component of type '{type.Name}', maybe you should 'TryGetComponent'?");
             return GetComponent(index);
@@ -262,6 +267,7 @@ namespace Ignite.Entities
         /// <returns>Index of a component of type <paramref name="type"/>.</returns>
         private int GetComponentIndex(Type type)
         {
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
             Debug.Assert(_lookup is not null, "The entity isn't set to the world!");
             return _lookup.GetId(type);
         }
@@ -307,7 +313,9 @@ namespace Ignite.Entities
         /// <returns>Whether the component has been added ot not.</returns>
         public bool AddComponentOnce(Type type, IComponent component)
         {
-            if (HasComponent(type))
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
+
+            if (IsDestroyed || HasComponent(type))
                 return false;
 
             return _components.TryAdd(GetComponentIndex(type), component);
@@ -367,7 +375,7 @@ namespace Ignite.Entities
                 return false;
             }
 
-            AddComponent_Internal(component, index);
+            //AddComponent_Internal(component, index);
             return false;
         }
 
@@ -388,6 +396,8 @@ namespace Ignite.Entities
         /// <returns>Whether the component has been replaced or not.</returns>
         public bool ReplaceComponent(Type type, IComponent component)
         {
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
+
             if (IsDestroyed)
                 return false;
 
@@ -461,8 +471,35 @@ namespace Ignite.Entities
             return RemoveComponent(GetComponentIndex(type));
         }
 
-        public bool RemoveComponent(int index)
-            => false;
+        /// <summary>
+        /// Remove a component of type <paramref name="index"/>.
+        /// </summary>
+        /// <param name="type">Type of the component to remove.</param>
+        /// <returns>Whether the component has been removed or not.</returns>
+        private bool RemoveComponent(int index)
+        {
+            if(!HasComponent(index))
+            {
+                Debug.Fail("There is no component to remove!");
+                return false;
+            }
+
+            // unsubcribe events from components;
+
+            _components[index] = default!;
+            _availableComponents[index] = false;
+
+            bool causeDestroy = _components.Count == 0 && !IsDeactivated;
+            OnComponentRemoved?.Invoke(this, index, causeDestroy);
+            //_parent?.UntrackComponent(index, OnParentModified);
+
+            if(causeDestroy)
+            {
+                Destroy();
+            }
+
+            return true;
+        }
 
         public void Activate()
         {
@@ -481,6 +518,11 @@ namespace Ignite.Entities
         {
             _wasDeactivatedFromParent = true;
             Deactivate();
+        }
+
+        public void Destroy()
+        {
+
         }
     }
 }
