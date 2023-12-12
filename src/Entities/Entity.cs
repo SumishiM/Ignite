@@ -132,7 +132,7 @@ namespace Ignite.Entities
 
         public bool ReplaceComponent<T>(T component) where T : IComponent
             => false;
-        public bool ReplaceComponent(Type type, IComponent component) 
+        public bool ReplaceComponent(Type type, IComponent component)
             => false;
 
         public bool AddOrReplaceComponent<T>(T component) where T : IComponent
@@ -150,5 +150,22 @@ namespace Ignite.Entities
         }
         public bool RemoveComponent(int index)
             => false;
+
+        public void Activate()
+        {
+
+        }
+        public void Activate(Entity _)
+        {
+
+        }
+
+        public void Deactivate()
+        {
+        }
+        public void Deactivate(Entity _)
+        {
+
+        }
     }
 }

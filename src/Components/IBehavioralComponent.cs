@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Ignite.Components
 {
-    public class ComponentLookup
+    public interface IBehavioralComponent : IComponent
     {
     }
 }
