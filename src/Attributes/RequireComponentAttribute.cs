@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ignite.src.Attributes
+namespace Ignite.Attributes
 {
     /// <summary>
     /// Attributes for setting a some require components for the entity to work fine.
