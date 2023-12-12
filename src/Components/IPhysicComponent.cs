@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ignite.Components
+﻿namespace Ignite.Components
 {
-    public interface IPhysicComponent : IComponent
+    public interface IPhysicComponent : ITransformComponent
     {
     }
 }
