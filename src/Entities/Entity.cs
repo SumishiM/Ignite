@@ -3,6 +3,7 @@ using Ignite.Components;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Ignite.Entities
 {
@@ -44,6 +45,7 @@ namespace Ignite.Entities
         public event Action<Entity, int>? OnComponentModified;
 
         public int Id { get; init; }
+        private Entity? _parent = null;
 
         /// <summary>
         /// Whether the entity is active or not.
@@ -174,7 +176,8 @@ namespace Ignite.Entities
         /// Try get a component of type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Type of the component</typeparam>
-        /// <param name="component">Component of type <typeparamref name="T"/>, if there is no component of type <typeparamref name="T"/>, return null.</param>
+        /// <param name="component">Component of type <typeparamref name="T"/>, 
+        /// if there is no component of type <typeparamref name="T"/>, return null.</param>
         /// <returns>Whether the entity has a component of type <typeparamref name="T"/></returns>
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : IComponent
         {
@@ -194,7 +197,8 @@ namespace Ignite.Entities
         /// Try get a component at a given <paramref name="index"/>
         /// </summary>
         /// <param name="index">Index of the component.</param>
-        /// <param name="component">Resulting component, if there is no component with <paramref name="index"/>, return null.</param>
+        /// <param name="component">Resulting component, 
+        /// if there is no component with <paramref name="index"/>, return null.</param>
         /// <returns>Whether the entity has a component with the given <paramref name="index"/></returns>
         private bool TryGetComponent(int index, [NotNullWhen(true)] out IComponent? component)
         {
@@ -263,7 +267,8 @@ namespace Ignite.Entities
         }
 
         /// <summary>
-        /// Add an empty component of type <typeparamref name="T"/> if there isn't already one of type <typeparamref name="T"/>.
+        /// Add an empty component of type <typeparamref name="T"/> 
+        /// if there isn't already one of type <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Type of the component.</typeparam>
         /// <returns>Whether the component has been added ot not.</returns>
@@ -284,7 +289,8 @@ namespace Ignite.Entities
         }
 
         /// <summary>
-        /// Add <paramref name="component"/> to the entity components if there isn't already one of type <typeparamref name="T"/>
+        /// Add <paramref name="component"/> to the entity components 
+        /// if there isn't already one of type <typeparamref name="T"/>
         /// </summary>
         /// <typeparam name="T">Type of the component.</typeparam>
         /// <param name="component"></param>
@@ -293,7 +299,8 @@ namespace Ignite.Entities
             => AddComponentOnce(typeof(T), component);
 
         /// <summary>
-        /// Add <paramref name="component"/> to the entity components if there isn't already one of type <paramref name="type"/>
+        /// Add <paramref name="component"/> to the entity components 
+        /// if there isn't already one of type <paramref name="type"/>
         /// </summary>
         /// <param name="type">Type of the component.</param>
         /// <param name="component"></param>
@@ -364,13 +371,53 @@ namespace Ignite.Entities
             return false;
         }
 
+        /// <summary>
+        /// Replace a component of type <typeparamref name="T"/> with <paramref name="component"/>
+        /// </summary>
+        /// <typeparam name="T">Type of the component.</typeparam>
+        /// <param name="component">Component to replace with.</param>
+        /// <returns>Whether the component has been replaced or not.</returns>
         public bool ReplaceComponent<T>(T component) where T : IComponent
-            => false;
-        public bool ReplaceComponent(Type type, IComponent component)
-            => false;
+            => ReplaceComponent(typeof(T), component);
 
         /// <summary>
-        /// Add a <paramref name="component"/> of type <typeparamref name="T"/> to the entity, if there is already a similar component, it replace it.
+        /// Replace a component of type <paramref name="type"/> with <paramref name="component"/>
+        /// </summary>
+        /// <param name="type">Type of the component.</typeparam>
+        /// <param name="component">Component to replace with.</param>
+        /// <returns>Whether the component has been replaced or not.</returns>
+        public bool ReplaceComponent(Type type, IComponent component)
+        {
+            if (IsDestroyed)
+                return false;
+
+            if (!HasComponent(type))
+            {
+                Debug.Fail(
+                    $"There is no component to replace with the type {type.Name}!" + 
+                    $" Maybe use {nameof(AddOrReplaceComponent)}() instead.");
+                return false;
+            }
+
+            // unsubscribe specialized components
+            int index = GetComponentIndex(type);
+            _components[index] = component;
+
+            // todo : change this ?
+            if( _parent is not null && component is IParentRelativeComponent
+                && _parent.TryGetComponent(index, out IComponent? parentComponent))
+            {
+                //OnParentModified(index, parentComponent);
+                return true;
+            }
+
+            //NotifyComponentReplaced(index, component);
+            return true;
+        }
+
+        /// <summary>
+        /// Add a <paramref name="component"/> of type <typeparamref name="T"/> to the entity, 
+        /// if there is already a similar component, it replace it.
         /// </summary>
         /// <typeparam name="T">Type of the component.</typeparam>
         /// <param name="component">Component to add or replace with.</param>
@@ -379,7 +426,8 @@ namespace Ignite.Entities
             => AddOrReplaceComponent(typeof(T), component);
 
         /// <summary>
-        /// Add a <paramref name="component"/> of type <paramref name="type"/> to the entity, if there is already a similar component, it replace it.
+        /// Add a <paramref name="component"/> of type <paramref name="type"/> to the entity, 
+        /// if there is already a similar component, it replace it.
         /// </summary>
         /// <param name="type">Type of the component.</param>
         /// <param name="component">Component to add or replace with.</param>
@@ -394,14 +442,25 @@ namespace Ignite.Entities
             return AddComponent(component, GetComponentIndex(type));
         }
 
+        /// <summary>
+        /// Remove a component of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of the component to remove.</typeparam>
+        /// <returns>Whether the component has been removed or not.</returns>
         public bool RemoveComponent<T>() where T : IComponent
             => RemoveComponent(GetComponentIndex<T>());
 
+        /// <summary>
+        /// Remove a component of type <paramref name="type"/>.
+        /// </summary>
+        /// <param name="type">Type of the component to remove.</param>
+        /// <returns>Whether the component has been removed or not.</returns>
         public bool RemoveComponent(Type type)
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
             return RemoveComponent(GetComponentIndex(type));
         }
+
         public bool RemoveComponent(int index)
             => false;
 
