@@ -159,7 +159,7 @@ namespace Ignite.Contexts
             builder[AccessKind.Read] = ImmutableHashSet<int>.Empty;
             builder[AccessKind.Write] = ImmutableHashSet<int>.Empty;
 
-            foreach(var (filter, targets) in filters)
+            foreach (var (filter, targets) in filters)
             {
                 if (targets.IsDefaultOrEmpty || filter.Filter is AccessFilter.NoneOf)
                     // No-op
@@ -191,15 +191,27 @@ namespace Ignite.Contexts
             return builder.ToImmutableDictionary();
         }
 
-        public void FilterEntity(Entity entity) 
+        public void FilterEntity(Entity entity)
         {
-            if(IsNoFilter)
+            if (IsNoFilter)
             {
                 //No-op for this context
                 return;
             }
 
+            entity.OnComponentAdded += OnEntityComponentAdded;
+            entity.OnComponentRemoved += OnEntityComponentRemoved;
 
+            if (MatchEntity(entity))
+            {
+
+                entity.OnComponentAdded += OnEntityComponentAddedInContext;
+                entity.OnComponentRemoved += OnEntityComponentRemovedInContext;
+
+
+                if (!entity.IsDeactivated)
+                    Entities.TryAdd(entity.Id, entity);
+            }
         }
 
         /// <summary>
@@ -207,7 +219,7 @@ namespace Ignite.Contexts
         /// </summary>
         /// <param name="entity">Entity to check</param>
         /// <returns>Whether the entity is valid or not</returns>
-        public bool MatchEntity(Entity entity)
+        private bool MatchEntity(Entity entity)
         {
             if (_targetComponentsIndices.TryGetValue(AccessFilter.AnyOf, out var indices))
             {
@@ -229,7 +241,7 @@ namespace Ignite.Contexts
                 return true;
             }
 
-            if(_targetComponentsIndices.TryGetValue(AccessFilter.NoneOf, out indices))
+            if (_targetComponentsIndices.TryGetValue(AccessFilter.NoneOf, out indices))
             {
                 foreach (var index in indices)
                 {
@@ -239,6 +251,26 @@ namespace Ignite.Contexts
             }
 
             return true;
+        }
+
+        private void OnEntityComponentAdded(Entity entity, int index)
+        {
+
+        }
+
+        private void OnEntityComponentRemoved(Entity entity, int index, bool removedFromDelete)
+        {
+
+        }
+
+        private void OnEntityComponentAddedInContext(Entity entity, int index)
+        {
+
+        }
+
+        private void OnEntityComponentRemovedInContext(Entity entity, int index, bool removedFromDelete)
+        {
+
         }
     }
 }
