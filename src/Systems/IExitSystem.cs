@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ignite.src.Systems
+﻿namespace Ignite.Systems
 {
-    internal interface IExitSystem
+    public interface IExitSystem : ISystem
     {
     }
 }
