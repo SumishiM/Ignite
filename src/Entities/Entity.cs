@@ -177,7 +177,7 @@ namespace Ignite.Entities
         /// </summary>
         /// <param name="index">Index of the component.</param>
         /// <returns>Whether the entity has a component.</returns>
-        private bool HasComponent(int index)
+        internal bool HasComponent(int index)
             => index < _availableComponents.Length && _availableComponents[index];
 
         /// <summary>
