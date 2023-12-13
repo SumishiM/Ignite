@@ -68,6 +68,11 @@ namespace Ignite.Entities
         private bool _wasDeactivatedFromParent;
 
         /// <summary>
+        /// If we need to know when the entity has been deactivated by it's parent
+        /// </summary>
+        public bool DeactivatedFromParent => _wasDeactivatedFromParent;
+
+        /// <summary>
         /// List of available components for an index
         /// </summary>
         private bool[] _availableComponents;
@@ -501,12 +506,19 @@ namespace Ignite.Entities
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Activate()
         {
 
         }
+
         public void Activate(Entity _)
         {
+            if (!_wasDeactivatedFromParent)
+                return;
+
             Activate();
         }
 
@@ -516,6 +528,9 @@ namespace Ignite.Entities
 
         public void Deactivate(Entity _)
         {
+            if (IsDeactivated)
+                return;
+
             _wasDeactivatedFromParent = true;
             Deactivate();
         }
