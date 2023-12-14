@@ -5,7 +5,8 @@
     /// for a <see cref="Ignite.Entities.Entity"/> to work properly.
     /// <para>This attribute must be used on <see cref="Ignite.Entities.Entity"/> types.</para>
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct,
+        AllowMultiple = true, Inherited = true)]
     public class RequireComponentAttribute : Attribute
     {
         /// <summary>

@@ -33,9 +33,7 @@ namespace Ignite.Attributes
             Context.AccessKind kind, 
             params Type[] types)
         {
-            Types = types;
-            Filter = filter;
-            Kind = kind;
+            (Types, Filter, Kind) = (types, filter, kind);
         }
 
         /// <param name="filter">Filter</param>
