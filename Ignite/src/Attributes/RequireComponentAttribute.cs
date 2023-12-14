@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ignite.Attributes
+﻿namespace Ignite.Attributes
 {
     /// <summary>
-    /// Attributes for setting a some require components for the entity to work fine.
+    /// Specifies the required <see cref="Ignite.Components.IComponent"/> types
+    /// for a <see cref="Ignite.Entities.Entity"/> to work properly.
+    /// <para>This attribute must be used on <see cref="Ignite.Entities.Entity"/> types.</para>
     /// </summary>
-    /// <remarks>
-    /// 
-    /// </remarks>
-    /// <param name="types">Require components types.</param>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class RequireComponentAttribute(params Type[] types) : Attribute
+    public class RequireComponentAttribute : Attribute
     {
         /// <summary>
-        /// Types used by the system to create the components
+        /// <see cref="Ignite.Components.IComponent"/> types 
+        /// require for the entity to work properly.
         /// </summary>
-        public Type[] Types { get; init; } = types;
+        public Type[] Types { get; init; } = Array.Empty<Type>();
+
+        /// <param name="types"><see cref="Ignite.Components.IComponent"/> types needed 
+        /// by the <see cref="Ignite.Entities.Entity"/> to work properly.</param>
+        public RequireComponentAttribute(params Type[] types)
+        {
+            Types = types;  
+        }
     }
 }
