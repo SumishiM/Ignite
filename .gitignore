@@ -2,6 +2,9 @@
 
 **/bin/
 **/obj/
+**/Binary/
+**/Bin-Intermediate/
+
 *.mgcb
 *.temp
 imgui.ini

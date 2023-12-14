@@ -9,6 +9,8 @@
 		<AssemblyName>Ignite</AssemblyName>
 		<RootNamespace>Ignite</RootNamespace>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<BaseOutputPath>..\Binary\$(AssemblyName)\</BaseOutputPath>
+		<BaseIntermediateOutputPath>..\Bin-Intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
 	</PropertyGroup>
 
 </Project>
