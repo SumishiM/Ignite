@@ -1,9 +1,10 @@
 ﻿using Ignite.Attributes;
 using Ignite.Components;
+using Ignite.Utils;
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Ignite.Entities
 {
@@ -23,28 +24,28 @@ namespace Ignite.Entities
         /// Fired an event when the entity has been destroyed.
         /// With it's id
         /// </summary>
-        public event Action<int>? OnEntityDestroyed;
+        public event Action<UniqueID>? OnEntityDestroyed;
 
         /// <summary>
         /// Fired an event whenever a component has been added.
         /// Arguments are the entity to which the component has been added and the component id.
         /// </summary>
-        public event Action<Entity, int>? OnComponentAdded;
+        public event Action<Entity, TypeUniqueID>? OnComponentAdded;
 
         /// <summary>
         /// Fired an event whenever a component has been removed.
         /// Arguments are the entity to which the component has been removed, 
         /// the component id and whether it was from a destroy.
         /// </summary>
-        public event Action<Entity, int, bool>? OnComponentRemoved;
+        public event Action<Entity, TypeUniqueID, bool>? OnComponentRemoved;
 
         /// <summary>
         /// Fired an event whenever a component has been modified.
         /// Arguments are the entity who's component has been modified and the component id.
         /// </summary>
-        public event Action<Entity, int>? OnComponentModified;
+        public event Action<Entity, TypeUniqueID>? OnComponentModified;
 
-        public int Id { get; init; }
+        public UniqueID Id { get; init; }
         private Entity? _parent = null;
 
         /// <summary>
@@ -73,14 +74,9 @@ namespace Ignite.Entities
         public bool DeactivatedFromParent => _wasDeactivatedFromParent;
 
         /// <summary>
-        /// List of available components for an index
-        /// </summary>
-        private bool[] _availableComponents;
-
-        /// <summary>
         /// List of every components on the entity
         /// </summary>
-        private Dictionary<int, IComponent> _components;
+        private Dictionary<TypeUniqueID, IComponent> _components;
 
         private ComponentsLookupTable _lookup;
 
@@ -88,34 +84,31 @@ namespace Ignite.Entities
         /// List of the entity components
         /// </summary>
         public ImmutableArray<IComponent> Components => _components
-            .Where(kvp => _availableComponents[kvp.Key])
             .Select(kvp => kvp.Value)
             .ToImmutableArray();
 
         /// <summary>
         /// List of the entity components indices
         /// </summary>
-        public ImmutableArray<int> ComponentIndices => _components
-            .Where(kvp => _availableComponents[kvp.Key])
+        public ImmutableArray<TypeUniqueID> ComponentIndices => _components
             .Select(kvp => kvp.Key)
             .ToImmutableArray();
 
-        internal Entity(/*World world,*/int id, IComponent[] components)
+        internal Entity(World world, UniqueID id, IComponent[] components)
         {
             Id = id;
-
-            _availableComponents = new bool[_lookup.TotalIndices];
+            _lookup = world.Lookup;
 
             InitializeComponents(components);
         }
 
         internal void InitializeComponents(IComponent[] components)
         {
-            _components = new Dictionary<int, IComponent>();
+            _components = new Dictionary<TypeUniqueID, IComponent>();
 
             foreach (IComponent component in components)
             {
-                int index = _lookup.GetId(component.GetType());
+                TypeUniqueID index = _lookup.GetId(component.GetType());
                 _components.TryAdd(index, component);
             }
         }
@@ -125,11 +118,10 @@ namespace Ignite.Entities
         /// </summary>
         internal void CheckForRequiredComponents()
         {
-            ImmutableDictionary<int, Type> components = _components
-                .Where(kvp => _availableComponents[kvp.Key])
+            ImmutableDictionary<TypeUniqueID, Type> components = _components
                 .ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.GetType());
 
-            foreach ((int _, Type type) in components)
+            foreach ((TypeUniqueID _, Type type) in components)
             {
 
                 RequireComponentAttribute? require = type
@@ -141,7 +133,7 @@ namespace Ignite.Entities
 
                 foreach (Type requiredType in require.Types)
                 {
-                    int requiredId = requiredType.GetHashCode();
+                    TypeUniqueID requiredId = TypeUniqueID.GetOrCreateUniqueID(requiredType);
 
                     Debug.Assert(typeof(IComponent).IsAssignableFrom(requiredType),
                         $"The required type [{requiredType.Name}] is not a Component.");
@@ -159,7 +151,16 @@ namespace Ignite.Entities
         /// <param name="component"></param>
         /// <returns>Whether the entity has a component of type <typeparamref name="T"/>.</returns>
         public bool HasComponent<T>() where T : IComponent
-            => HasComponent(GetComponentIndex<T>());
+            => HasComponent(typeof(T));
+
+        /// <summary>
+        /// Check whether the entity has a component of type <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T">Type of the <see cref="IComponent"/></typeparam>
+        /// <param name="component"></param>
+        /// <returns>Whether the entity has a component of type <typeparamref name="T"/>.</returns>
+        public bool HasComponent(TypeUniqueID index)
+            => _components.ContainsKey(index);
 
         /// <summary>
         /// Check whether the entity has a component of type <paramref name="type"/>
@@ -168,32 +169,22 @@ namespace Ignite.Entities
         /// <returns>Whether the entity has a component of type <paramref name="type"/>.</returns>
         public bool HasComponent(Type type)
         {
-            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
-            return HasComponent(GetComponentIndex(type));
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type) && TypeUniqueID.Exist(type));
+            return _components.ContainsKey(TypeUniqueID.GetOrCreateUniqueID(type));
         }
 
         /// <summary>
-        /// Check whether the entity has a component from it's <paramref name="index"/>
-        /// </summary>
-        /// <param name="index">Index of the component.</param>
-        /// <returns>Whether the entity has a component.</returns>
-        internal bool HasComponent(int index)
-            => index < _availableComponents.Length && _availableComponents[index];
-
-        /// <summary>
-        /// Try get a component of type <typeparamref name="T"/>.
+        /// Try get a component of <see cref="Type"/> <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">Type of the component</typeparam>
-        /// <param name="component">Component of type <typeparamref name="T"/>, 
-        /// if there is no component of type <typeparamref name="T"/>, return null.</param>
-        /// <returns>Whether the entity has a component of type <typeparamref name="T"/></returns>
+        /// <param name="component">Component of <see cref="Type"/> <typeparamref name="T"/>, 
+        /// if there is no component of <see cref="Type"/> <typeparamref name="T"/>, return null.</param>
+        /// <returns>Whether the entity has a component of <see cref="Type"/> <typeparamref name="T"/></returns>
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : IComponent
         {
-            int index = GetComponentIndex(typeof(T));
-
-            if (TryGetComponent(index, out IComponent? c))
+            if (TryGetComponent(typeof(T), out IComponent? c))
             {
-                component = (T)c;
+                component = (T)c!;
                 return true;
             }
 
@@ -202,17 +193,17 @@ namespace Ignite.Entities
         }
 
         /// <summary>
-        /// Try get a component at a given <paramref name="index"/>
+        /// Try get a component at a given <see cref="Type"/>
         /// </summary>
-        /// <param name="index">Index of the component.</param>
+        /// <param name="type"><see cref="Type"/> of the component.</param>
         /// <param name="component">Resulting component, 
-        /// if there is no component with <paramref name="index"/>, return null.</param>
-        /// <returns>Whether the entity has a component with the given <paramref name="index"/></returns>
-        private bool TryGetComponent(int index, [NotNullWhen(true)] out IComponent? component)
+        /// if there is no component with this <see cref="Type"/>, return null.</param>
+        /// <returns>Whether the entity has a component with the given <see cref="Type"/></returns>
+        private bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (HasComponent(index))
+            if (HasComponent(type))
             {
-                component = _components[index];
+                component = _components[TypeUniqueID.GetOrCreateUniqueID(type)];
                 return true;
             }
 
@@ -227,9 +218,9 @@ namespace Ignite.Entities
         /// <returns>A component of type <typeparamref name="T"/></returns>
         public T GetComponent<T>() where T : IComponent
         {
-            int index = GetComponentIndex<T>();
-            Debug.Assert(HasComponent(index), $"The entity doesn't have a component of type '{typeof(T).Name}', maybe you should 'TryGetComponent'?");
-            return (T)GetComponent(index);
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(typeof(T)) && TypeUniqueID.Exist(typeof(T)), 
+                $"The entity doesn't have a component of type '{typeof(T).Name}', maybe you should 'TryGetComponent'?");
+            return (T)_components[TypeUniqueID.Get<T>()];
         }
 
         /// <summary>
@@ -239,42 +230,9 @@ namespace Ignite.Entities
         /// <returns>A component with instantiation type of <paramref name="type"/></returns>
         public IComponent GetComponent(Type type)
         {
-            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
-
-            int index = GetComponentIndex(type);
-            Debug.Assert(HasComponent(index), $"The entity doesn't have a component of type '{type.Name}', maybe you should 'TryGetComponent'?");
-            return GetComponent(index);
-        }
-
-        /// <summary>
-        /// Get a component of type <typeparamref name="T"/>
-        /// </summary>
-        /// <typeparam name="T">type of the component.</typeparam>
-        /// <returns>A component of type <typeparamref name="T"/></returns>
-        private IComponent GetComponent(int index)
-        {
-            Debug.Assert(HasComponent(index), $"The entity doesn't have a component of index '{index}', maybe you should 'TryGetComponent'?");
-            return _components[index];
-        }
-
-        /// <summary>
-        /// Get an index from a type <typeparamref name="T"/> component.
-        /// </summary>
-        /// <typeparam name="T">Type of the component we want the id.</typeparam>
-        /// <returns>Index of a type <typeparamref name="T"/> component.</returns>
-        private int GetComponentIndex<T>() where T : IComponent
-            => GetComponentIndex(typeof(T));
-
-        /// <summary>
-        /// Get an index from a component of type <paramref name="type"/>.
-        /// </summary>
-        /// <param name="type">Type of the component.</param>
-        /// <returns>Index of a component of type <paramref name="type"/>.</returns>
-        private int GetComponentIndex(Type type)
-        {
-            Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
-            Debug.Assert(_lookup is not null, "The entity isn't set to the world!");
-            return _lookup.GetId(type);
+            Debug.Assert(typeof(IComponent).IsAssignableFrom(type) && TypeUniqueID.Exist(type), 
+                $"The entity doesn't have a component of type '{type.Name}', maybe you should 'TryGetComponent'?");
+            return _components[TypeUniqueID.Get(type)];
         }
 
         /// <summary>
@@ -291,7 +249,7 @@ namespace Ignite.Entities
                 return false;
             }
 
-            int index = GetComponentIndex<T>();
+            TypeUniqueID index = TypeUniqueID.Get<T>();
 
             T component = new();
             AddComponent(component, index);
@@ -323,7 +281,7 @@ namespace Ignite.Entities
             if (IsDestroyed || HasComponent(type))
                 return false;
 
-            return _components.TryAdd(GetComponentIndex(type), component);
+            return _components.TryAdd(TypeUniqueID.Get(type), component);
         }
 
         /// <summary>
@@ -334,14 +292,8 @@ namespace Ignite.Entities
         /// <returns>The entity with the added <paramref name="component"/>.</returns>
         public Entity AddComponent<T>(T component) where T : IComponent
         {
-            if (_lookup is null)
-            {
-                // the world is null here so we just add the component
-                _components.Add(_components.Count, component);
-                return this;
-            }
 
-            int index = GetComponentIndex(typeof(T));
+            TypeUniqueID index = TypeUniqueID.Get<T>();
             AddComponent(component, index);
 
             return this;
@@ -356,7 +308,7 @@ namespace Ignite.Entities
         public Entity AddComponent(Type type, IComponent component)
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
-            AddComponent(component, GetComponentIndex(type));
+            AddComponent(component, TypeUniqueID.Get(type));
             return this;
         }
 
@@ -366,7 +318,7 @@ namespace Ignite.Entities
         /// <param name="component">Component to add.</param>
         /// <param name="index">Index where to add the <paramref name="component"/></param>
         /// <returns>Whether the component has been added to the entity or not.</returns>
-        private bool AddComponent(IComponent component, int index)
+        private bool AddComponent(IComponent component, TypeUniqueID index)
         {
             if (IsDestroyed)
             {
@@ -415,12 +367,12 @@ namespace Ignite.Entities
             }
 
             // unsubscribe specialized components
-            int index = GetComponentIndex(type);
+            TypeUniqueID index = TypeUniqueID.Get(type);
             _components[index] = component;
 
             // todo : change this ?
             if( _parent is not null && component is IParentRelativeComponent
-                && _parent.TryGetComponent(index, out IComponent? parentComponent))
+                && _parent.TryGetComponent(type, out IComponent? parentComponent))
             {
                 //OnParentModified(index, parentComponent);
                 return true;
@@ -454,7 +406,7 @@ namespace Ignite.Entities
                 return ReplaceComponent(type, component);
             }
 
-            return AddComponent(component, GetComponentIndex(type));
+            return AddComponent(component, TypeUniqueID.Get(type));
         }
 
         /// <summary>
@@ -463,7 +415,7 @@ namespace Ignite.Entities
         /// <typeparam name="T">Type of the component to remove.</typeparam>
         /// <returns>Whether the component has been removed or not.</returns>
         public bool RemoveComponent<T>() where T : IComponent
-            => RemoveComponent(GetComponentIndex<T>());
+            => RemoveComponent(TypeUniqueID.Get<T>());
 
         /// <summary>
         /// Remove a component of type <paramref name="type"/>.
@@ -473,7 +425,7 @@ namespace Ignite.Entities
         public bool RemoveComponent(Type type)
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type));
-            return RemoveComponent(GetComponentIndex(type));
+            return RemoveComponent(TypeUniqueID.Get(type));
         }
 
         /// <summary>
@@ -481,7 +433,7 @@ namespace Ignite.Entities
         /// </summary>
         /// <param name="type">Type of the component to remove.</param>
         /// <returns>Whether the component has been removed or not.</returns>
-        private bool RemoveComponent(int index)
+        private bool RemoveComponent(TypeUniqueID index)
         {
             if(!HasComponent(index))
             {
@@ -491,8 +443,7 @@ namespace Ignite.Entities
 
             // unsubcribe events from components;
 
-            _components[index] = default!;
-            _availableComponents[index] = false;
+            _components.Remove(index);
 
             bool causeDestroy = _components.Count == 0 && !IsDeactivated;
             OnComponentRemoved?.Invoke(this, index, causeDestroy);

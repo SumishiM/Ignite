@@ -2,7 +2,7 @@
 using Ignite.Components;
 using Ignite.Entities;
 using Ignite.Systems;
-
+using Ignite.Utils;
 using System.Collections.Immutable;
 
 namespace Ignite.Contexts
@@ -61,12 +61,12 @@ namespace Ignite.Contexts
         /// <summary>
         /// Ordered components indices by filter types
         /// </summary>
-        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponentsIndices;
+        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<TypeUniqueID>> _targetComponentsIndices;
 
         /// <summary>
         /// Ordered components indices by there accessibility
         /// </summary>
-        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _componentsOperationKind;
+        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<TypeUniqueID>> _componentsOperationKind;
 
         private readonly ComponentsLookupTable Lookup;
 
@@ -88,9 +88,9 @@ namespace Ignite.Contexts
         /// <param name="system"></param>
         /// <returns>immutable list of elements containing a 
         /// filter and a list of indicies of components affected by the filter</returns>
-        private ImmutableArray<(FilterAttribute, ImmutableArray<int>)> CreateFilters(ISystem system)
+        private ImmutableArray<(FilterAttribute, ImmutableArray<TypeUniqueID>)> CreateFilters(ISystem system)
         {
-            var builder = ImmutableArray.CreateBuilder<(FilterAttribute, ImmutableArray<int>)>();
+            var builder = ImmutableArray.CreateBuilder<(FilterAttribute, ImmutableArray<TypeUniqueID>)>();
 
             // collect filters on the system
             FilterAttribute[] filters = (FilterAttribute[])system
@@ -111,17 +111,17 @@ namespace Ignite.Contexts
         /// </summary>
         /// <param name="filters"></param>
         /// <returns>Ordered components by filters</returns>
-        private static ImmutableDictionary<AccessFilter, ImmutableArray<int>> CreateTargetComponents(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+        private static ImmutableDictionary<AccessFilter, ImmutableArray<TypeUniqueID>> CreateTargetComponents(
+            ImmutableArray<(FilterAttribute, ImmutableArray<TypeUniqueID>)> filters)
         {
-            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<int>>();
+            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<TypeUniqueID>>();
 
             foreach (var (filter, targets) in filters)
             {
                 if (filter.Filter is AccessFilter.NoFilter)
                 {
                     // Default value for context
-                    builder[filter.Filter] = ImmutableArray<int>.Empty;
+                    builder[filter.Filter] = ImmutableArray<TypeUniqueID>.Empty;
                     continue;
                 }
 
@@ -132,7 +132,7 @@ namespace Ignite.Contexts
                 // Check if there is already some types stored for the filter
                 // If true -> Add to the already stored types
                 // If false -> Add the targets
-                if (builder.TryGetValue(filter.Filter, out ImmutableArray<int> value))
+                if (builder.TryGetValue(filter.Filter, out ImmutableArray<TypeUniqueID> value))
                 {
                     builder[filter.Filter] = value.Union(targets).ToImmutableArray();
                 }
@@ -150,14 +150,14 @@ namespace Ignite.Contexts
         /// </summary>
         /// <param name="filters"></param>
         /// <returns>Ordered components by accessibility</returns>
-        private ImmutableDictionary<AccessKind, ImmutableHashSet<int>> CreateAccessKindComponents(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+        private ImmutableDictionary<AccessKind, ImmutableHashSet<TypeUniqueID>> CreateAccessKindComponents(
+            ImmutableArray<(FilterAttribute, ImmutableArray<TypeUniqueID>)> filters)
         {
-            var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<int>>();
+            var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<TypeUniqueID>>();
 
             // set default value for the context to use
-            builder[AccessKind.Read] = ImmutableHashSet<int>.Empty;
-            builder[AccessKind.Write] = ImmutableHashSet<int>.Empty;
+            builder[AccessKind.Read] = ImmutableHashSet<TypeUniqueID>.Empty;
+            builder[AccessKind.Write] = ImmutableHashSet<TypeUniqueID>.Empty;
 
             foreach (var (filter, targets) in filters)
             {
@@ -253,22 +253,22 @@ namespace Ignite.Contexts
             return true;
         }
 
-        private void OnEntityComponentAdded(Entity entity, int index)
+        private void OnEntityComponentAdded(Entity entity, TypeUniqueID index)
         {
 
         }
 
-        private void OnEntityComponentRemoved(Entity entity, int index, bool removedFromDelete)
+        private void OnEntityComponentRemoved(Entity entity, TypeUniqueID index, bool removedFromDelete)
         {
 
         }
 
-        private void OnEntityComponentAddedInContext(Entity entity, int index)
+        private void OnEntityComponentAddedInContext(Entity entity, TypeUniqueID index)
         {
 
         }
 
-        private void OnEntityComponentRemovedInContext(Entity entity, int index, bool removedFromDelete)
+        private void OnEntityComponentRemovedInContext(Entity entity, TypeUniqueID index, bool removedFromDelete)
         {
 
         }
