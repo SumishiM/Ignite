@@ -1,9 +1,4 @@
 ﻿using Ignite.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ignite
 {
@@ -11,5 +6,6 @@ namespace Ignite
     {
         public ComponentLookupTable Lookup { get; set; }
 
+        public Dictionary<int, Node> Nodes { get; set; }
     }
 }

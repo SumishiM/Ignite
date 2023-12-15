@@ -1,7 +1,6 @@
 ﻿using Ignite.Components;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 
 namespace Ignite
 {
@@ -38,7 +37,7 @@ namespace Ignite
         }
          */
 
-        public bool HasComponent<T>()
+        public bool HasComponent<T>() where T : class, IComponent
             => HasComponent(_lookup[typeof(T)]);
 
         public bool HasComponent(Type type)

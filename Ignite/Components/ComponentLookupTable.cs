@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ignite.Components
 {
@@ -14,9 +8,7 @@ namespace Ignite.Components
         private readonly ImmutableDictionary<Type, int> _componentsIndex = 
             new Dictionary<Type, int>().ToImmutableDictionary();
 
-
         public int this[Type type] => GetIndex(type);
-
 
         public int GetIndex<T>() where T : class, IComponent
             => GetIndex(typeof(T));
@@ -48,7 +40,5 @@ namespace Ignite.Components
             _componentsIndex.Add(type, index);
             return index;
         }
-
-        
     }
 }
