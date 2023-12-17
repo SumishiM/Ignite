@@ -203,7 +203,7 @@ namespace Ignite
         }
 
         /// <summary>
-        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// Remove a of <see cref="Type"/> <typeparamref name="T"/> if there is one on this node
         /// </summary>
         public Node RemoveComponent<T>()
         {
@@ -212,7 +212,7 @@ namespace Ignite
         }
 
         /// <summary>
-        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// Remove a of <see cref="Type"/> <paramref name="type"/> if there is one on this node
         /// </summary>
         public Node RemoveComponent(Type type)
         {
