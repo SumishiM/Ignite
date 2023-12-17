@@ -2,6 +2,10 @@
 
 namespace Ignite
 {
+    /** 
+     * This part of the Node class is responsible of the hierarchy for nodes
+     * 
+    **/
     public partial class Node
     {
         protected Node? _parent;
