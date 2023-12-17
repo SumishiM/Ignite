@@ -1,3 +1,3 @@
 # Ignite
 
-A simple C# ECS framework.
+A simple C# EC framework.
