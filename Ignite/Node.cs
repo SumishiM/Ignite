@@ -39,22 +39,40 @@ namespace Ignite
         }
         */
 
+        /// <summary>
+        /// Check whether the node has a component of <see cref="Type"/> <typeparamref name="T"/> or not
+        /// </summary>
         public bool HasComponent<T> () where T : class, IComponent
             => HasComponent(_lookup[typeof(T)]);
 
+        /// <summary>
+        /// Check whether the node has a component of <see cref="Type"/> <paramref name="type"/> or not
+        /// </summary>
         public bool HasComponent ( Type type )
             => HasComponent(_lookup[type]);
 
+        /// <summary>
+        /// Check whether the node has a component from it's index or not
+        /// </summary>
         internal bool HasComponent ( int index )
         {
             return Components.ContainsKey(index);
         }
 
+        /// <summary>
+        /// Check whether the node has a component or not
+        /// </summary>
         internal bool HasComponent ( IComponent component)
         {
             return Components.ContainsKey(_lookup[component]);
         }
 
+        /// <summary>
+        /// Try to get a component of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of the component we want to get</typeparam>
+        /// <param name="component">Output component</param>
+        /// <returns>Whether the component has been got or not.</returns>
         public bool TryGetComponent<T> ( [NotNullWhen(true)] out T? component )
             where T : class, IComponent
         {
@@ -68,6 +86,12 @@ namespace Ignite
             return false;
         }
 
+        /// <summary>
+        /// Try to get a component of <see cref="Type"/> <paramref name="type"/>
+        /// </summary>
+        /// <param name="type"><see cref="Type"/> of the component we want to get</param>
+        /// <param name="component">Output component</param>
+        /// <returns>Whether the component has been got or not.</returns>
         public bool TryGetComponent ( Type type, [NotNullWhen(true)] out IComponent? component )
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
@@ -83,33 +107,52 @@ namespace Ignite
             return false;
         }
 
+        /// <summary>
+        /// Get a component of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         public T GetComponent<T> () where T : class, IComponent
         {
             Debug.Assert(HasComponent<T>(), $"This node doesn't contain this component");
             return (T)Components[_lookup[typeof(T)]];
         }
 
+        /// <summary>
+        /// Get a component of <see cref="Type"/> <paramref name="type"/>
+        /// </summary>
         public IComponent GetComponent ( Type type )
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
                 $"Why are we trying to get and object that isn't a component!?");
             Debug.Assert(HasComponent(type), $"This node doesn't contain this component");
+
             return Components[_lookup[type]];
         }
 
+        /// <summary>
+        /// Get the index of a component of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         internal int GetComponentIndex<T> ()
         {
             return _lookup[typeof(T)];
         }
 
+        /// <summary>
+        /// Get the index of a component of <see cref="Type"/> <paramref name="type"/>
+        /// </summary>
         internal int GetComponentIndex ( Type type )
         {
             return _lookup[type];
         }
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         public Node AddComponent<T> () where T : class, IComponent, new()
             => AddComponent(new T());
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/>
+        /// </summary>
         public Node AddComponent ( Type type )
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
@@ -118,6 +161,9 @@ namespace Ignite
             return AddComponent((IComponent)Activator.CreateInstance(type)!);
         }
 
+        /// <summary>
+        /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         public Node AddComponent<T> ( T component ) where T : class, IComponent
         {
             Debug.Assert(!HasComponent(component),
@@ -127,9 +173,17 @@ namespace Ignite
             return this;
         }
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// or replace the already set component of the same <see cref="Type"/>
+        /// </summary>
         public Node AddOrReplaceComponent<T> () where T : class, IComponent, new()
             => AddOrReplaceComponent(new T());
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/>
+        /// or replace the already set component of the same <see cref="Type"/>
+        /// </summary>
         public Node AddOrReplaceComponent ( Type type )
         {
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
@@ -138,18 +192,28 @@ namespace Ignite
             return AddOrReplaceComponent((IComponent)Activator.CreateInstance(type)!);
         }
 
+        /// <summary>
+        /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// or replace the already set component of the same <see cref="Type"/>
+        /// </summary>
         public Node AddOrReplaceComponent<T> ( T component ) where T : class, IComponent
         {
             Components[_lookup[component.GetType()]] = component;
             return this;
         }
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         public Node RemoveComponent<T>()
         {
             Components.Remove(_lookup[typeof(T)]);
             return this;
         }
 
+        /// <summary>
+        /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
         public Node RemoveComponent(Type type)
         {
             Components.Remove(_lookup[type]);
