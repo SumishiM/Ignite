@@ -1,5 +1,4 @@
 ﻿using Ignite.Attributes;
-using Ignite.Components;
 using System.Reflection;
 
 namespace Ignite
