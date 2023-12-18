@@ -111,5 +111,47 @@ namespace Ignite.Systems
 
             return builder.ToImmutableDictionary();
         }
+
+        private bool IsValid(Node node)
+        {
+            if (_targetComponents.TryGetValue(AccessFilter.NoneOf, out var components))
+            {
+                foreach (var index in components)
+                {
+                    if (node.HasComponent(index))
+                        return false;
+                }
+            }
+
+            if (_targetComponents.TryGetValue(AccessFilter.AnyOf, out components))
+            {
+                foreach (var index in components)
+                {
+                    if (node.HasComponent(index))
+                        return true;
+                }
+            }
+
+            if (_targetComponents.TryGetValue(AccessFilter.AllOf, out components))
+            {
+                foreach (var index in components)
+                {
+                    if (!node.HasComponent(index))
+                        return false;
+                }
+                return true;
+            }
+
+            // ?
+            return false;
+        }
+
+        public void TryRegisterNode(Node node)
+        {
+            if (IsValid(node))
+            {
+                _entities.Add(node.Id);
+            }
+        }
     }
 }

@@ -13,7 +13,7 @@
         /// <summary>
         /// Unique Id for the node in the world
         /// </summary>
-        private readonly int Id;
+        internal readonly int Id;
 
         private bool _isActive = true;
         public bool IsActive => _isActive;
