@@ -1,9 +1,4 @@
-﻿using Ignite.Components;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-
-namespace Ignite
+﻿namespace Ignite
 {
     /// <summary>
     /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
@@ -23,9 +18,16 @@ namespace Ignite
         private bool _isActive = true;
         public bool IsActive => _isActive;
 
+        /// <summary>
+        /// Whether the node will keep working during world pause or not
+        /// </summary>
+        public bool IgnorePause { get; private set; } = false;
+
         public Node(World world)
         {
             _lookup = world.Lookup;
+            CheckIgnorePause();
+            CheckRequiredComponents();
         }
 
         public virtual void Enabled()
@@ -47,6 +49,7 @@ namespace Ignite
         {
             RemoveAllComponents();
             DestroyChildren();
+
             _parent = null;
             OnDestroyed?.Invoke(this);
 

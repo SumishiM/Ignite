@@ -10,15 +10,28 @@ namespace Ignite
     **/
     public partial class Node
     {
+        /// <summary>
+        /// Trigger when a component is added, send the component as payload
+        /// </summary>
         public event Action<IComponent>? OnComponentAdded;
+
+        /// <summary>
+        /// Trigger when a component is replaced, send the old component id and the component as payload
+        /// </summary>
         public event Action<int, IComponent>? OnComponentReplaced;
+
+        /// <summary>
+        /// Trigger when a component is removed, send the component id and the whether it was from node deletion or not as payload
+        /// </summary>
         public event Action<int, bool>? OnComponentRemoved;
 
+        /// <summary>
+        /// Collection of components referenced by there id
+        /// </summary>
         public Dictionary<int, IComponent> Components { get; protected set; } =
             new Dictionary<int, IComponent>();
 
         private readonly ComponentLookupTable _lookup;
-
 
         public Node ( World world, params IComponent[] components )
             : this(world)

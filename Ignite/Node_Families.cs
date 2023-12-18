@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Ignite
 {
@@ -26,26 +25,30 @@ namespace Ignite
             OnParentChanged?.Invoke(this, parent);
         }
 
-        public void AddChild(Node child)
+        public Node AddChild(Node child)
         {
             _children[child.Id] = child;
             OnChildAdded?.Invoke(this, child);
             child.SetParent(this);
+            return this;
         }
 
-        public void AddChildren(IEnumerable<Node> children)
+        public Node AddChildren(IEnumerable<Node> children)
         {
             foreach (var child in children)
             {
                 AddChild(child);
             }
+            return this;
         }
 
-        public void RemoveChild(Node child)
+        public Node RemoveChild(Node child)
         {
             _children.Remove(child.Id);
             OnChildRemoved?.Invoke(this, child, false);
             child.SetParent(null);
+
+            return this;
         }
 
         internal void DestroyChildren()
