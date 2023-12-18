@@ -153,9 +153,11 @@ namespace Ignite
         public Node AddComponent<T> ( T component ) where T : class, IComponent
         {
             Debug.Assert(!HasComponent(component),
-                $"Why are we adding a component to a node already having one of the same type ? Try AddOrReplaceComponent instead.");
+                $"Why are we adding a component to a node already having one of the same type ? " +
+                $"Try AddOrReplaceComponent instead.");
 
             Components[_lookup[component.GetType()]] = component;
+            component.Node = this;
             return this;
         }
 
@@ -185,6 +187,7 @@ namespace Ignite
         public Node AddOrReplaceComponent<T> ( T component ) where T : class, IComponent
         {
             Components[_lookup[component.GetType()]] = component;
+            component.Node = this;
             return this;
         }
 

@@ -11,12 +11,30 @@ namespace Ignite
     /// </summary>
     public partial class Node
     {
+        public event EventHandler OnEnabled;
+        public event EventHandler OnDisabled;
+
+        /// <summary>
+        /// Unique Id for the node in the world
+        /// </summary>
         private readonly int Id;
 
-        public Node ( World world )
+        private bool _isActive = true;
+        public bool IsActive => _isActive;
+
+        public Node(World world)
         {
             _lookup = world.Lookup;
         }
 
+        public virtual void Enabled()
+        {
+            OnEnabled?.Invoke(this, EventArgs.Empty);
+        }
+
+        public virtual void Disabled()
+        {
+            OnDisabled?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

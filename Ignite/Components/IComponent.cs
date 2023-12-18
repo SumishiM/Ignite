@@ -2,5 +2,6 @@
 {
     public interface IComponent
     {
+        Node Node { get; internal set; }
     }
 }
