@@ -11,9 +11,9 @@ namespace Ignite
     /// </summary>
     public partial class Node : IDisposable
     {
-        public event EventHandler OnEnabled;
-        public event EventHandler OnDisabled;
-        public event EventHandler OnDestroyed;
+        public event Action<Node>? OnEnabled;
+        public event Action<Node>? OnDisabled;
+        public event Action<Node>? OnDestroyed;
 
         /// <summary>
         /// Unique Id for the node in the world
@@ -30,12 +30,12 @@ namespace Ignite
 
         public virtual void Enabled()
         {
-            OnEnabled?.Invoke(this, EventArgs.Empty);
+            OnEnabled?.Invoke(this);
         }
 
         public virtual void Disabled()
         {
-            OnDisabled?.Invoke(this, EventArgs.Empty);
+            OnDisabled?.Invoke(this);
         }
 
         public void Destroy()
@@ -48,9 +48,17 @@ namespace Ignite
             RemoveAllComponents();
             _parent = null;
             //DestroyChildren();
+            OnDestroyed?.Invoke(this);
 
-
-            OnDestroyed?.Invoke(this, EventArgs.Empty);
+            OnEnabled = null;
+            OnDisabled = null;
+            OnDestroyed = null;
+            OnChildAdded = null;
+            OnChildRemoved = null;
+            OnParentChanged = null;
+            OnComponentAdded = null;
+            OnComponentRemoved = null;
+            OnComponentReplaced = null;
             GC.SuppressFinalize(this);
         }
     }

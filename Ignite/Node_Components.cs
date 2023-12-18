@@ -10,9 +10,9 @@ namespace Ignite
     **/
     public partial class Node
     {
-        public event Action<IComponent> OnComponentAdded;
-        public event Action<int, IComponent> OnComponentReplaced;
-        public event Action<int, bool> OnComponentRemoved;
+        public event Action<IComponent>? OnComponentAdded;
+        public event Action<int, IComponent>? OnComponentReplaced;
+        public event Action<int, bool>? OnComponentRemoved;
 
         public Dictionary<int, IComponent> Components { get; protected set; } =
             new Dictionary<int, IComponent>();
