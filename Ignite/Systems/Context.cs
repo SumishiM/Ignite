@@ -24,9 +24,9 @@ namespace Ignite.Systems
         }
 
 
-        private HashSet<int> _entities;
-        private ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponents;
-        private ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _operations;
+        private readonly HashSet<int> _entities;
+        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponents;
+        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _operations;
 
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
