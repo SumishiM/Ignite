@@ -9,10 +9,11 @@ namespace Ignite
     /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
     /// Every world objects in Ignite needs to inherit from this class in order to work.
     /// </summary>
-    public partial class Node
+    public partial class Node : IDisposable
     {
         public event EventHandler OnEnabled;
         public event EventHandler OnDisabled;
+        public event EventHandler OnDestroyed;
 
         /// <summary>
         /// Unique Id for the node in the world
@@ -35,6 +36,22 @@ namespace Ignite
         public virtual void Disabled()
         {
             OnDisabled?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Destroy()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            RemoveAllComponents();
+            _parent = null;
+            //DestroyChildren();
+
+
+            OnDestroyed?.Invoke(this, EventArgs.Empty);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -8,9 +8,9 @@ namespace Ignite
     **/
     public partial class Node
     {
-        public event EventHandler<Node?> OnParentChanged;
-        public event EventHandler<Node> OnChildAdded;
-        public event EventHandler<Node> OnChildRemoved;
+        public event Action<Node, Node?> OnParentChanged;
+        public event Action<Node, Node> OnChildAdded;
+        public event Action<Node, Node> OnChildRemoved;
 
         protected Node? _parent;
         public Node? Parent => _parent;
@@ -23,13 +23,13 @@ namespace Ignite
         public void SetParent(Node? parent)
         {
             _parent = parent;
-            OnParentChanged?.Invoke(this, parent);
+            OnParentChanged.Invoke(this, parent);
         }
 
         public void AddChild(Node child)
         {
             _children[child.Id] = child;
-            OnChildAdded?.Invoke(this, child);
+            OnChildAdded.Invoke(this, child);
             child.SetParent(this);
         }
 
@@ -39,6 +39,13 @@ namespace Ignite
             {
                 AddChild(child);
             }
+        }
+
+        public void RemoveChild(Node child) 
+        { 
+            _children.Remove(child.Id);
+            OnChildRemoved.Invoke(this, child);
+            child.SetParent(null);
         }
     }
 }

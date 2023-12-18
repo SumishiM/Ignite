@@ -10,6 +10,10 @@ namespace Ignite
     **/
     public partial class Node
     {
+        public event Action<IComponent> OnComponentAdded;
+        public event Action<int, IComponent> OnComponentReplaced;
+        public event Action<int, bool> OnComponentRemoved;
+
         public Dictionary<int, IComponent> Components { get; protected set; } =
             new Dictionary<int, IComponent>();
 
@@ -158,6 +162,7 @@ namespace Ignite
 
             Components[_lookup[component.GetType()]] = component;
             component.Node = this;
+            OnComponentAdded?.Invoke(component);
             return this;
         }
 
@@ -184,10 +189,24 @@ namespace Ignite
         /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// or replace the already set component of the same <see cref="Type"/>
         /// </summary>
-        public Node AddOrReplaceComponent<T> ( T component ) where T : class, IComponent
+        public Node AddOrReplaceComponent<T>(T component) where T : class, IComponent
         {
+            int index = _lookup[component.GetType()];
+            if (Components.ContainsKey(index))
+            {
+                Components[index] = component;
+                component.Node = this;
+
+                OnComponentReplaced?.Invoke(index, component);
+
+                return this; 
+            }
+
             Components[_lookup[component.GetType()]] = component;
             component.Node = this;
+
+            OnComponentAdded?.Invoke(component);
+
             return this;
         }
 
@@ -196,7 +215,9 @@ namespace Ignite
         /// </summary>
         public Node RemoveComponent<T> ()
         {
-            Components.Remove(_lookup[typeof(T)]);
+            int index = _lookup[typeof(T)];
+            Components.Remove(index);
+            OnComponentRemoved?.Invoke(index, false);
             return this;
         }
 
@@ -205,8 +226,19 @@ namespace Ignite
         /// </summary>
         public Node RemoveComponent ( Type type )
         {
-            Components.Remove(_lookup[type]);
+            int index = _lookup[type];
+            Components.Remove(index);
+            OnComponentRemoved?.Invoke(index, false);
             return this;
+        }
+
+        private void RemoveAllComponents()
+        {
+            foreach ( var component in Components )
+            {
+                Components.Remove(component.Key);
+                OnComponentRemoved?.Invoke(component.Key, true);
+            }
         }
     }
 }
