@@ -10,7 +10,7 @@ namespace Ignite
     {
         public event Action<Node, Node?>? OnParentChanged;
         public event Action<Node, Node>? OnChildAdded;
-        public event Action<Node, Node>? OnChildRemoved;
+        public event Action<Node, Node, bool>? OnChildRemoved;
 
         protected Node? _parent;
         public Node? Parent => _parent;
@@ -41,11 +41,21 @@ namespace Ignite
             }
         }
 
-        public void RemoveChild(Node child) 
-        { 
+        public void RemoveChild(Node child)
+        {
             _children.Remove(child.Id);
-            OnChildRemoved?.Invoke(this, child);
+            OnChildRemoved?.Invoke(this, child, false);
             child.SetParent(null);
+        }
+
+        internal void DestroyChildren()
+        {
+            foreach ((int id, Node child) in _children)
+            {
+                _children.Remove(id);
+                OnChildRemoved?.Invoke(this, child, true);
+                child.Destroy();
+            }
         }
     }
 }

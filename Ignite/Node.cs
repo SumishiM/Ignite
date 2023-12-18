@@ -46,8 +46,8 @@ namespace Ignite
         public void Dispose()
         {
             RemoveAllComponents();
+            DestroyChildren();
             _parent = null;
-            //DestroyChildren();
             OnDestroyed?.Invoke(this);
 
             OnEnabled = null;
@@ -59,6 +59,7 @@ namespace Ignite
             OnComponentAdded = null;
             OnComponentRemoved = null;
             OnComponentReplaced = null;
+
             GC.SuppressFinalize(this);
         }
     }
