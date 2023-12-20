@@ -8,6 +8,8 @@ namespace Ignite
 
         public Dictionary<int, Node> Nodes { get; set; }
 
+
+
         public World ()
         {
             Node node = new Node(this);

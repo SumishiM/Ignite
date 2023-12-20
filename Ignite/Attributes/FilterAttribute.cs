@@ -1,4 +1,6 @@
 ﻿using Ignite.Systems;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Ignite.Attributes
 {
@@ -11,6 +13,8 @@ namespace Ignite.Attributes
 
         public FilterAttribute(Context.AccessFilter filter, Context.AccessKind kind, params Type[] types)
         {
+            Debug.Assert(types.Any(t => typeof(IComponent).IsAssignableFrom(t)), 
+                "Why are we requiring a type that is not a component ?");
             (Types, Filter, Kind) = (types, filter, kind);
         }
 

@@ -1,8 +1,6 @@
 ﻿using Ignite.Attributes;
 using Ignite.Components;
 using System.Collections.Immutable;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Ignite.Systems
 {
@@ -143,7 +141,7 @@ namespace Ignite.Systems
             }
 
             // ?
-            return false;
+            return true;
         }
 
         public void TryRegisterNode(Node node)
