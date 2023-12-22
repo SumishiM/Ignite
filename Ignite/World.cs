@@ -6,13 +6,13 @@ namespace Ignite
     {
         public ComponentLookupTable Lookup { get; set; }
 
+        public Node Root { get; private set; }
         public Dictionary<int, Node> Nodes { get; set; }
-
 
 
         public World ()
         {
-            Node node = new Node(this);
+            Root = new Node(this);
         }
     }
 }

@@ -18,6 +18,8 @@
         private bool _isActive = true;
         public bool IsActive => _isActive;
 
+        private bool _pendingDestroy = false;
+
         /// <summary>
         /// Whether the node will keep working during world pause or not
         /// </summary>
@@ -30,23 +32,36 @@
             CheckRequiredComponents();
         }
 
-        public virtual void Enabled()
+        public virtual void Enable()
         {
+            if (_isActive) return;
+
+            _isActive = true;
             OnEnabled?.Invoke(this);
         }
 
-        public virtual void Disabled()
+        public virtual void Disable()
         {
+            if (!_isActive) return;
+
+            _isActive = false;
             OnDisabled?.Invoke(this);
         }
 
-        public void Destroy()
+        public virtual void Destroy()
         {
             Dispose();
         }
 
         public void Dispose()
         {
+            if(_pendingDestroy)
+                return; 
+            
+            _pendingDestroy = true;
+
+            Disable();
+
             RemoveAllComponents();
             DestroyChildren();
 
