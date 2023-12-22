@@ -1,9 +1,13 @@
 ﻿using Ignite.Components;
+using Ignite.Utils;
 
 namespace Ignite
 {
     public partial class Node
     {
+        public static Builder CreateBuilder(World world)
+            => new (world);
+
         public sealed class Builder
         {
             private readonly World _world;
@@ -59,6 +63,9 @@ namespace Ignite
                 return this;
             }
 
+            public Node ToNode()
+                => this;
+
             public static implicit operator Node(Builder b)
             {
                 Node node = new(b._world);
@@ -74,6 +81,8 @@ namespace Ignite
                 {
                     node.AddComponent(type);
                 }
+                node.Id = NodeId.Next(0);
+                b._world.RegisterNode(node);
 
                 return node;
             }

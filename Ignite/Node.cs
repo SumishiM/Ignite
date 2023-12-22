@@ -13,7 +13,7 @@
         /// <summary>
         /// Unique Id for the node in the world
         /// </summary>
-        internal readonly int Id;
+        internal int Id;
 
         private bool _isActive = true;
         public bool IsActive => _isActive;
@@ -24,6 +24,14 @@
         /// Whether the node will keep working during world pause or not
         /// </summary>
         public bool IgnorePause { get; private set; } = false;
+
+        [System.Flags]
+        public enum Flags : ulong
+        {
+            Disabled = 1ul << 63,
+            PendingDestroy = 1ul << 62,
+
+        }
 
         public Node(World world)
         {

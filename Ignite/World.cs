@@ -12,7 +12,7 @@ namespace Ignite
 
         public World ()
         {
-            Root = new Node(this);
+            Root = Node.CreateBuilder(this).ToNode();
         }
     }
 }
