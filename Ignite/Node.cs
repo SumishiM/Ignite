@@ -1,4 +1,6 @@
-﻿namespace Ignite
+﻿using Ignite.Utils;
+
+namespace Ignite
 {
     /// <summary>
     /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
@@ -13,7 +15,7 @@
         /// <summary>
         /// Unique Id for the node in the world
         /// </summary>
-        internal int Id;
+        internal NodeId Id;
 
         private bool _isActive = true;
         public bool IsActive => _isActive;
@@ -25,6 +27,8 @@
         /// </summary>
         public bool IgnorePause { get; private set; } = false;
 
+        public World World { get; private set; }
+
         [System.Flags]
         public enum Flags : ulong
         {
@@ -35,9 +39,16 @@
 
         public Node(World world)
         {
+            World = world;
             _lookup = world.Lookup;
+
+            Id = new NodeId();
+            world.RegisterNode(this);
+            
             CheckIgnorePause();
             CheckRequiredComponents();
+
+            OnDestroyed += world.UnregisterNode;
         }
 
         public virtual void Enable()

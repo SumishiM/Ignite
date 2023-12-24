@@ -1,21 +1,31 @@
-﻿using static Ignite.Node;
-
+﻿
 namespace Ignite.Utils
 {
     public class NodeId
     {
         public ulong Id { get; internal set; }
-        private const ulong FlagSectionMask = 0xFFFF000000000000; // Higher 16 bits mask
-        private const ulong RestOfBitsMask = 0x0000FFFFFFFFFFFF; // Lower 48 bits mask
 
-        public void SetFlags(Node.Flags flags)
+        public NodeId()
         {
-            Id = (Id & RestOfBitsMask) | ((ulong)flags << 48);
+            Id = Next();
         }
 
+        /// <summary>
+        /// Set flags on the id
+        /// not made for now
+        /// </summary>
+        public void SetFlags(Node.Flags flags)
+        {
+           // Id = (Id & RestOfBitsMask) | ((ulong)flags << 48);
+        }
+
+        /// <summary>
+        /// Remove flags on the id
+        /// not made for now
+        /// </summary>
         public void RemoveFlags(Node.Flags flags)
         {
-            Id ^= (ulong)flags;
+            //Id ^= (ulong)flags;
         }
 
         public bool HasFlag(Node.Flags flags)
@@ -28,7 +38,7 @@ namespace Ignite.Utils
         private static uint CurrentId = 0;
         private static ushort CurrentGenerationId = 0;
 
-        public static ulong Next(Node.Flags flags)
+        public static ulong Next(Node.Flags flags = 0)
         {
             ulong id = (ulong)flags;
 
