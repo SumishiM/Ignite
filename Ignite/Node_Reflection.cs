@@ -12,6 +12,12 @@ namespace Ignite
         {
             IgnorePause = GetType().DeclaringType?
                 .GetCustomAttribute(typeof(IgnorePauseAttribute), true) != null;
+            if ( !IgnorePause )
+            {
+                // on pause and resume toggle a flag in id 
+                World.OnPaused += Pause;
+                World.OnResumed += Resume;
+            }
         }
 
         /// <summary>
