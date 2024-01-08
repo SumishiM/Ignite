@@ -1,4 +1,6 @@
-﻿namespace Ignite
+﻿using Ignite.Utils;
+
+namespace Ignite
 {
     /// <summary>
     /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
@@ -6,6 +8,8 @@
     /// </summary>
     public partial class Node : IDisposable
     {
+        public event Action<Node>? OnPaused;
+        public event Action<Node>? OnResumed;
         public event Action<Node>? OnEnabled;
         public event Action<Node>? OnDisabled;
         public event Action<Node>? OnDestroyed;
@@ -20,10 +24,15 @@
 
         private bool _pendingDestroy = false;
 
+        private bool _isPaused = false;
+        public bool IsPaused => _isPaused;
+
         /// <summary>
         /// Whether the node will keep working during world pause or not
         /// </summary>
         public bool IgnorePause { get; private set; } = false;
+
+        public World World { get; private set; }
 
         [System.Flags]
         public enum Flags : ulong
@@ -79,9 +88,16 @@
 
         public Node(World world)
         {
+            World = world;
             _lookup = world.Lookup;
+
+            Id = new NodeId();
+            world.RegisterNode(this);
+            
             CheckIgnorePause();
             CheckRequiredComponents();
+
+            OnDestroyed += world.UnregisterNode;
         }
 
         public virtual void Enable()
@@ -90,6 +106,9 @@
 
             _isActive = true;
             OnEnabled?.Invoke(this);
+
+            if ( _isPaused )
+                Resume();
         }
 
         public virtual void Disable()
@@ -98,6 +117,31 @@
 
             _isActive = false;
             OnDisabled?.Invoke(this);
+        }
+
+        /// <summary>
+        /// If the Node is paused then it disables it 
+        /// </summary>
+        /// <param name="world"></param>
+        private void Pause()
+        {
+            if ( _isPaused ) return;
+            _isPaused = true;
+            OnPaused?.Invoke(this);
+            Disable();
+        }
+
+        /// <summary>
+        /// If the node is disabled then we dont resume it
+        /// ? Might cause some issues later ?
+        /// </summary>
+        /// <param name="world"></param>
+        private void Resume ()
+        {
+            if( !_isPaused || !_isActive ) return;
+
+            _isPaused = false;
+            OnResumed?.Invoke(this);
         }
 
         public virtual void Destroy()
