@@ -22,9 +22,9 @@ namespace Ignite.Systems
         }
 
 
-        private readonly HashSet<int> _entities;
-        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponents;
-        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _operations;
+        private readonly HashSet<ulong> _entities;
+        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<ulong>> _targetComponents;
+        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<ulong>> _operations;
 
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
@@ -39,9 +39,9 @@ namespace Ignite.Systems
             _operations = CreateOperationsKind(filters);
         }
 
-        private ImmutableArray<(FilterAttribute, ImmutableArray<int>)> CreateFilters(ISystem system)
+        private ImmutableArray<(FilterAttribute, ImmutableArray<ulong>)> CreateFilters(ISystem system)
         {
-            var builder = ImmutableArray.CreateBuilder<(FilterAttribute, ImmutableArray<int>)>();
+            var builder = ImmutableArray.CreateBuilder<(FilterAttribute, ImmutableArray<ulong>)>();
 
             FilterAttribute[] filters = (FilterAttribute[])system.GetType()
                 .GetCustomAttributes(typeof(FilterAttribute), true);
@@ -54,17 +54,17 @@ namespace Ignite.Systems
             return builder.ToImmutableArray();
         }
 
-        private ImmutableDictionary<AccessFilter, ImmutableArray<int>> CreateTargetComponents(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+        private ImmutableDictionary<AccessFilter, ImmutableArray<ulong>> CreateTargetComponents(
+            ImmutableArray<(FilterAttribute, ImmutableArray<ulong>)> filters)
         {
-            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<int>>();
+            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<ulong>>();
 
             foreach (var (filter, targets) in filters)
             {
                 if (filter.Filter is AccessFilter.NoFilter)
                 {
                     // No-op just set no filter 
-                    builder[AccessFilter.NoFilter] = ImmutableArray<int>.Empty;
+                    builder[AccessFilter.NoFilter] = ImmutableArray<ulong>.Empty;
                     continue;
                 }
 
@@ -86,14 +86,14 @@ namespace Ignite.Systems
             return builder.ToImmutableDictionary();
         }
 
-        private ImmutableDictionary<AccessKind, ImmutableHashSet<int>> CreateOperationsKind(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+        private ImmutableDictionary<AccessKind, ImmutableHashSet<ulong>> CreateOperationsKind(
+            ImmutableArray<(FilterAttribute, ImmutableArray<ulong>)> filters)
         {
-            var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<int>>();
+            var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<ulong>>();
 
             // set default empty hashset 
-            builder[AccessKind.Read] = ImmutableHashSet<int>.Empty;
-            builder[AccessKind.Write] = ImmutableHashSet<int>.Empty;
+            builder[AccessKind.Read] = ImmutableHashSet<ulong>.Empty;
+            builder[AccessKind.Write] = ImmutableHashSet<ulong>.Empty;
 
             foreach (var (filter, targets) in filters)
             {

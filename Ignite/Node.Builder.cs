@@ -1,5 +1,4 @@
 ﻿using Ignite.Components;
-using Ignite.Utils;
 
 namespace Ignite
 {
@@ -81,7 +80,7 @@ namespace Ignite
                 {
                     node.AddComponent(type);
                 }
-                node.Id = NodeId.Next(0);
+                node.Id = UID.Next();
                 b._world.RegisterNode(node);
 
                 return node;

@@ -15,8 +15,8 @@ namespace Ignite
         public Node? Parent => _parent;
 
 
-        private readonly Dictionary<int, Node> _children = new();
-        internal Dictionary<int, Node> ChildrenIndex => _children;
+        private readonly Dictionary<ulong, Node> _children = new();
+        internal Dictionary<ulong, Node> ChildrenIndex => _children;
         public ImmutableArray<Node> Children => _children.Values.ToImmutableArray();
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Ignite
         /// </summary>
         internal void DestroyChildren()
         {
-            foreach ((int id, Node child) in _children)
+            foreach ((ulong id, Node child) in _children)
             {
                 if (_children.Remove(id))
                 {
