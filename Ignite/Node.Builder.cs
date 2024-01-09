@@ -1,4 +1,5 @@
 ﻿using Ignite.Components;
+using System.Diagnostics;
 
 namespace Ignite
 {
@@ -11,7 +12,7 @@ namespace Ignite
         {
             private readonly World _world;
 
-            private Node? _parent;
+            public Node? Parent { get; set; }
             private readonly List<Node> _children = [];
             private readonly List<Type> _componentsTypes = [];
             private readonly List<IComponent> _components = [];
@@ -21,17 +22,25 @@ namespace Ignite
                 _world = world;
             }
 
-            public Node? Parent { get => _parent; set => _parent = value; }
 
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>
             public Builder AddComponent<T>(T? component = null) where T : class, IComponent, new()
+                => AddComponent(typeof(T), component);
+
+            /// <summary>
+            /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/> or add a given existing component.
+            /// </summary>
+            public Builder AddComponent(Type type, IComponent? component = null) 
             {
+                Debug.Assert(typeof(IComponent).IsAssignableFrom(type), 
+                    $"Whay are we trying to add a component that isn't a IComponent ?");
+
                 if (component == null)
                 {
-                    if (_componentsTypes.Contains(typeof(T)) && !_components.Any(c => c.GetType() == typeof(T)))
-                        _componentsTypes.Add(typeof(T));
+                    if (_componentsTypes.Contains(type) && !_components.Any(c => c.GetType() == type))
+                        _componentsTypes.Add(type);
                 }
                 else
                 {
@@ -41,29 +50,7 @@ namespace Ignite
                 return this;
             }
 
-            /// <summary>
-            /// Add a child node if it's not already added or contained in a already listed child
-            /// </summary>
-            public Node AddChild(Node child)
-            {
-                // Todo : algo to check of any children contains this child or not
-                if (!_children.Contains(child))
-                    _children.Add(child);
-                return this;
-            }
-
-            /// <summary>
-            /// Add a list of node if they're not already added or contained in a already listed child
-            /// </summary>
-            public Node AddChildren(IEnumerable<Node> children)
-            {
-                foreach (Node child in children)
-                    AddChild(child);
-                return this;
-            }
-
-            public Node ToNode()
-                => this;
+            public Node ToNode() => this;
 
             public static implicit operator Node(Builder b)
             {
@@ -80,6 +67,7 @@ namespace Ignite
                 {
                     node.AddComponent(type);
                 }
+
                 node.Id = UID.Next();
                 b._world.RegisterNode(node);
 

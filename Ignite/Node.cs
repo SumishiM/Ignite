@@ -1,6 +1,4 @@
-﻿using Ignite.Utils;
-
-namespace Ignite
+﻿namespace Ignite
 {
     /// <summary>
     /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
@@ -84,6 +82,9 @@ namespace Ignite
                 LastGeneratedId = id;
                 return id;
             }
+
+            public static implicit operator UID(ulong id) => new() { Id = id };
+            public static implicit operator ulong(UID id) => id.Id;
         }
 
         public Node(World world)
@@ -91,7 +92,7 @@ namespace Ignite
             World = world;
             _lookup = world.Lookup;
 
-            Id = new NodeId();
+            Id = new UID();
             world.RegisterNode(this);
             
             CheckIgnorePause();
@@ -142,6 +143,7 @@ namespace Ignite
 
             _isPaused = false;
             OnResumed?.Invoke(this);
+            Enable();
         }
 
         public virtual void Destroy()
