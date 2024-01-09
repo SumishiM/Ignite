@@ -21,6 +21,7 @@
         public bool IsActive => _isActive;
 
         private bool _pendingDestroy = false;
+        public bool IsDestroyed => _pendingDestroy;
 
         private bool _isPaused = false;
         public bool IsPaused => _isPaused;

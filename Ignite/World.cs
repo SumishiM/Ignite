@@ -23,9 +23,11 @@ namespace Ignite
         public Node Root { get; private set; }
         public Dictionary<ulong, Node> Nodes { get; set; }
 
-        public Dictionary<int, ISystem> Systems { get; set; }
-        public Dictionary<Context, HashSet<int>> ContextsSystems { get; set; }
-        public Dictionary<int, Context> Contexts { get; set; }
+
+        public SortedList<int, (IStartSystem system, int context)> _cachedStartSystem;
+        public SortedList<int, (IExitSystem system, int context)> _cachedExitSystem;
+        public SortedList<int, (IUpdateSystem system, int context)> _cachedUpdateSystem;
+        public SortedList<int, (IRenderSystem system, int context)> _cachedRenderSystem;
 
 
         private bool _destroying = false;

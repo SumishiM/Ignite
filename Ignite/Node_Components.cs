@@ -13,23 +13,26 @@ namespace Ignite
         /// <summary>
         /// Trigger when a component is added, send the component as payload
         /// </summary>
-        public event Action<IComponent>? OnComponentAdded;
+        public event Action<Node, int>? OnComponentAdded;
 
         /// <summary>
         /// Trigger when a component is replaced, send the old component id and the component as payload
         /// </summary>
-        public event Action<int, IComponent>? OnComponentReplaced;
+        public event Action<Node, int>? OnComponentReplaced;
+        public event Action<Node, int>? OnComponentModified;
 
         /// <summary>
         /// Trigger when a component is removed, send the component id and the whether it was from node deletion or not as payload
         /// </summary>
-        public event Action<int, bool>? OnComponentRemoved;
+        public event Action<Node, int, bool>? OnComponentRemoved;
 
         /// <summary>
         /// Collection of components referenced by there id
         /// </summary>
         public Dictionary<int, IComponent> Components { get; protected set; } =
             new Dictionary<int, IComponent>();
+
+        public HashSet<int> ComponentsIndices => Components.Keys.ToHashSet();
 
         private readonly ComponentLookupTable _lookup;
 
@@ -175,7 +178,7 @@ namespace Ignite
 
             Components[_lookup[component.GetType()]] = component;
             component.Node = this;
-            OnComponentAdded?.Invoke(component);
+            OnComponentAdded?.Invoke(this, _lookup[component]);
             return this;
         }
 
@@ -210,7 +213,7 @@ namespace Ignite
                 Components[index] = component;
                 component.Node = this;
 
-                OnComponentReplaced?.Invoke(index, component);
+                //OnComponentReplaced?.Invoke(this, index, component);
 
                 return this; 
             }
@@ -218,7 +221,7 @@ namespace Ignite
             Components[_lookup[component.GetType()]] = component;
             component.Node = this;
 
-            OnComponentAdded?.Invoke(component);
+            OnComponentAdded?.Invoke(this, _lookup[component]);
 
             return this;
         }
@@ -230,7 +233,7 @@ namespace Ignite
         {
             int index = _lookup[typeof(T)];
             Components.Remove(index);
-            OnComponentRemoved?.Invoke(index, false);
+            OnComponentRemoved?.Invoke(this, index, false);
             return this;
         }
 
@@ -241,7 +244,7 @@ namespace Ignite
         {
             int index = _lookup[type];
             Components.Remove(index);
-            OnComponentRemoved?.Invoke(index, false);
+            OnComponentRemoved?.Invoke(this, index, false);
             return this;
         }
 
@@ -250,7 +253,7 @@ namespace Ignite
             foreach ( var component in Components )
             {
                 Components.Remove(component.Key);
-                OnComponentRemoved?.Invoke(component.Key, true);
+                OnComponentRemoved?.Invoke(this,component.Key, true);
             }
         }
     }

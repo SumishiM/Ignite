@@ -1,11 +1,15 @@
 ﻿using Ignite.Attributes;
 using Ignite.Components;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace Ignite.Systems
 {
-    public class Context
+    public class Context : IDisposable
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public enum AccessFilter
         {
             NoFilter,
@@ -14,12 +18,24 @@ namespace Ignite.Systems
             NoneOf,
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         [Flags]
         public enum AccessKind
         {
             Read = 1,
             Write = 2,
         }
+
+        internal event Action<Node, int>? OnNodeComponentAddedInContext;
+        internal event Action<Node, int, bool>? OnNodeComponentRemovedInContext;
+        internal event Action<Node, int>? OnNodeComponentModifiedInContext;
+        internal event Action<Node>? OnNodeEnabledInContext;
+        internal event Action<Node>? OnNodeDisabledInContext;
+
+        private readonly int _id;
+        internal int Id => _id;
 
         /// <summary>
         /// Nodes tracked by the context
@@ -34,16 +50,25 @@ namespace Ignite.Systems
                 return _cachedNodes.Value;
             }
         }
-        
-        private readonly HashSet<ulong> _deactivatedNodes;
+
+        /// <summary>
+        /// Track every deactivated nodes index from <see cref="_nodes"/>
+        /// </summary>
+        private readonly HashSet<ulong> _disabledNodes = [];
         private ImmutableArray<Node>? _cachedNodes = null;
 
-
+        /// <summary>
+        /// Components targeted by this context filter
+        /// </summary>
         private readonly ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponents;
-        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _operations;
 
-        internal ImmutableHashSet<int> ReadComponents => _operations[AccessKind.Read];
-        internal ImmutableHashSet<int> WriteComponents => _operations[AccessKind.Write];
+        /// <summary>
+        /// Components sorted by <see cref="AccessKind"/>
+        /// </summary>
+        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _componentsAccesses;
+
+        internal ImmutableHashSet<int> ReadComponents => _componentsAccesses[AccessKind.Read];
+        internal ImmutableHashSet<int> WriteComponents => _componentsAccesses[AccessKind.Write];
 
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
@@ -56,7 +81,7 @@ namespace Ignite.Systems
             _nodes = [];
             var filters = CreateFilters(system);
             _targetComponents = CreateTargetComponents(filters);
-            _operations = CreateOperationsKind(filters);
+            _componentsAccesses = CreateOperationsKind(filters);
         }
 
         /// <summary>
@@ -197,15 +222,166 @@ namespace Ignite.Systems
         }
 
         /// <summary>
-        /// Try to register a <see cref="Ignite.Node"/> in this <see cref="Context"/>
+        /// Try to register a <see cref="Ignite.Node"/> in this <see cref="Context"/>.
+        /// Subscribe context to the node events.
         /// </summary>
-        /// <param name="node"></param>
-        public void TryRegisterNode(Node node)
+        internal void TryRegisterNode(Node node)
         {
+            if (IsNoFilter) return;
+
+            node.OnComponentAdded += OnNodeComponentAdded;
+            node.OnComponentRemoved += OnNodeComponentRemoved;
+
             if (IsValid(node))
             {
-                _nodes.Add(node.Id, node);
+                node.OnComponentModified += OnNodeComponentModifiedInContext;
+                node.OnComponentRemoved += OnNodeComponentRemovedInContext;
+
+                node.OnEnabled += OnNodeEnabledInContext;
+                node.OnDisabled += OnNodeDisabledInContext;
+
+                if (OnNodeComponentAddedInContext is not null)
+                {
+                    if (node.IsActive)
+                    {
+                        foreach (var index in node.ComponentsIndices)
+                        {
+                            OnNodeComponentAddedInContext?.Invoke(node, index);
+                        }
+                    }
+
+                    node.OnComponentAdded += OnNodeComponentAddedInContext;
+                }
+
+                if (node.IsActive)
+                {
+                    _nodes[node.Id] = node;
+                    _cachedNodes = null;
+                }
             }
+        }
+
+        internal bool IsWatchingNode(Node node)
+            => IsWatchingNode(node.Id);
+
+        internal bool IsWatchingNode(ulong id)
+            => _nodes.ContainsKey(id);
+
+        internal void OnNodeComponentAdded(Node node, int component)
+        {
+            if (node.IsDestroyed) return;
+            OnNodeModified(node, component);
+        }
+
+        internal void OnNodeComponentRemoved(Node node, int component, bool fromDestroy)
+        {
+            if (node.IsDestroyed)
+            {
+                if (_nodes.ContainsKey(node.Id))
+                {
+                    StopWatchingNode(node, component, fromDestroy);
+                }
+                return;
+            }
+
+            OnNodeModified(node, component);
+        }
+
+        internal void OnNodeEnabled(Node node)
+        {
+            if (_nodes.ContainsKey(node.Id))
+                return;
+
+            _nodes.Add(node.Id, node);
+            _cachedNodes = null;
+
+            OnNodeEnabledInContext?.Invoke(node);
+            _disabledNodes.Remove(node.Id);
+        }
+
+        internal void OnNodeDisabled(Node node)
+        {
+            if (!_nodes.ContainsKey(node.Id))
+                return;
+
+            _nodes.Remove(node.Id);
+            _cachedNodes = null;
+
+            OnNodeDisabledInContext?.Invoke(node);
+
+            _disabledNodes.Add(node.Id);
+        }
+
+        internal void OnNodeModified(Node node, int component)
+        {
+            bool isFiltered = IsValid(node);
+            bool isWatching = IsWatchingNode(node);
+
+            if (isFiltered && !isWatching)
+                StartWatchingNode(node, component);
+            if (!isFiltered && isWatching)
+                StopWatchingNode(node, component, false);
+        }
+
+        internal void StartWatchingNode(Node node, int component)
+        {
+            node.OnComponentAdded += OnNodeComponentAddedInContext;
+            node.OnComponentRemoved += OnNodeComponentRemovedInContext;
+            node.OnComponentModified += OnNodeComponentModifiedInContext;
+
+            node.OnEnabled += OnNodeEnabledInContext;
+            node.OnDisabled += OnNodeDisabledInContext;
+
+            if (node.IsActive)
+            {
+                OnNodeComponentAddedInContext?.Invoke(node, component);
+
+                _nodes.Add(node.Id, node);
+                _cachedNodes = null;
+            }
+            else
+            {
+                _disabledNodes.Add(node.Id);
+            }
+        }
+
+        private void StopWatchingNode(Node node, int component, bool fromDestroy)
+        {
+            node.OnComponentAdded -= OnNodeComponentAddedInContext;
+            node.OnComponentRemoved -= OnNodeComponentRemovedInContext;
+            node.OnComponentModified -= OnNodeComponentModifiedInContext;
+
+            node.OnEnabled -= OnNodeEnabledInContext;
+            node.OnDisabled -= OnNodeDisabledInContext;
+
+            if (node.IsActive)
+            {
+                OnNodeComponentRemovedInContext?.Invoke(node, component, fromDestroy);
+            }
+            else
+            {
+                Debug.Assert(!_nodes.ContainsKey(node.Id),
+                    $"Why is a disabled node in the collection?");
+
+                _disabledNodes.Remove(node.Id);
+            }
+
+            _nodes.Remove(node.Id);
+            _cachedNodes = null;
+        }
+
+
+        public void Dispose()
+        {
+            OnNodeComponentAddedInContext = null;
+            OnNodeComponentRemovedInContext = null;
+            OnNodeComponentModifiedInContext = null;
+
+            OnNodeEnabledInContext = null;
+            OnNodeDisabledInContext = null;
+
+            _nodes.Clear();
+            _cachedNodes = null;
         }
     }
 }
