@@ -37,8 +37,8 @@
         public enum Flags : ulong
         {
             Empty = 0,
-            Disabled = 1ul << 63,
-            PendingDestroy = 1ul << 62,
+            Disabled = 0b1ul << 63,
+            PendingDestroy = 0b1ul << 62,
         }
 
         public class UID
