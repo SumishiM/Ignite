@@ -13,17 +13,20 @@ namespace Ignite
     /// Get lookup table
     /// </para>
     /// </summary>
-    public partial class World
+    public partial class World : IDisposable
     {
+        // events
+
         public Action<World>? OnDestroyed;
         public Action? OnPaused;
         public Action? OnResumed;
 
-        public ComponentLookupTable Lookup { get; set; }
-
+        // Node / hierarchy
         public Node Root { get; private set; }
         public Dictionary<ulong, Node> Nodes { get; set; }
 
+
+        // systems
         private readonly SortedList<int, (IStartSystem system, int context)> _cachedStartSystem;
         private readonly SortedList<int, (IExitSystem system, int context)> _cachedExitSystem;
         private readonly SortedList<int, (IUpdateSystem system, int context)> _cachedUpdateSystem;
@@ -39,7 +42,9 @@ namespace Ignite
         private readonly HashSet<int> _systemsInitialized;
 
         private readonly Dictionary<int, Context> _contexts;
+        public ComponentLookupTable Lookup { get; set; }
 
+        // states
         private bool _destroying = false;
 
         public World(IList<ISystem> systems)
@@ -122,6 +127,9 @@ namespace Ignite
             Nodes.Remove(node.Id);
         }
 
+        /// <summary>
+        /// Pause systems that can be paused
+        /// </summary>
         public void Pause()
         {
             foreach (var id in _pauseSystems)
@@ -134,6 +142,9 @@ namespace Ignite
             OnPaused?.Invoke();
         }
 
+        /// <summary>
+        /// Resume systems waiting to be resumed
+        /// </summary>
         public void Resume()
         {
             foreach (var id in _systemsToResume)
@@ -154,6 +165,15 @@ namespace Ignite
 
             Root.Destroy();
             OnDestroyed?.Invoke(this);
+        }
+
+        public void Dispose()
+        {
+            Destroy();
+
+            OnPaused = null;
+            OnResumed = null;
+            OnDestroyed = null;
         }
     }
 }
