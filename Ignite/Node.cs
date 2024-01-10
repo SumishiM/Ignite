@@ -1,7 +1,7 @@
 ﻿namespace Ignite
 {
     /// <summary>
-    /// Base class for Ignite entities, act as a container for <see cref="Ignite.Components.IComponent"/>s
+    /// Base class for Ignite entities, act as a <see cref="Ignite.Components.IComponent"/>s container
     /// Every world objects in Ignite needs to inherit from this class in order to work.
     /// </summary>
     public partial class Node : IDisposable
@@ -124,7 +124,6 @@
         /// <summary>
         /// If the Node is paused then it disables it 
         /// </summary>
-        /// <param name="world"></param>
         private void Pause()
         {
             if ( _isPaused ) return;
@@ -137,7 +136,6 @@
         /// If the node is disabled then we dont resume it
         /// ? Might cause some issues later ?
         /// </summary>
-        /// <param name="world"></param>
         private void Resume ()
         {
             if( !_isPaused || !_isActive ) return;

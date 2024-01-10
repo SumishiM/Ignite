@@ -2,5 +2,6 @@
 {
     public interface IStartSystem
     {
+        void Start(Context context);
     }
 }

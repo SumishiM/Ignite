@@ -2,5 +2,6 @@
 {
     public interface IExitSystem
     {
+        void Exit(Context context);
     }
 }
