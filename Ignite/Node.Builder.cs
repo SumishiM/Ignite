@@ -22,7 +22,6 @@ namespace Ignite
                 _world = world;
             }
 
-
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>

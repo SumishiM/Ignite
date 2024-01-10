@@ -27,10 +27,24 @@ namespace Ignite
         private readonly HashSet<Node> _pendingDestroyNodes = [];
 
 
-        // systems
+        /// <summary>
+        /// Systems executed on world start
+        /// </summary>
         private readonly SortedList<int, (IStartSystem system, int context)> _cachedStartSystem;
+
+        /// <summary>
+        /// Systems executed on world exit
+        /// </summary>
         private readonly SortedList<int, (IExitSystem system, int context)> _cachedExitSystem;
+
+        /// <summary>
+        /// Systems executed on world update
+        /// </summary>
         private readonly SortedList<int, (IUpdateSystem system, int context)> _cachedUpdateSystem;
+
+        /// <summary>
+        /// Systems executed on world render
+        /// </summary>
         private readonly SortedList<int, (IRenderSystem system, int context)> _cachedRenderSystem;
 
         private readonly Dictionary<int, SystemInfo> _systems;
@@ -43,6 +57,7 @@ namespace Ignite
         private readonly HashSet<int> _systemsInitialized;
 
         private readonly Dictionary<int, Context> _contexts;
+
         public ComponentLookupTable Lookup { get; set; }
 
         // states
