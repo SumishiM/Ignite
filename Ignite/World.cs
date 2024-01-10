@@ -23,7 +23,8 @@ namespace Ignite
 
         // Node / hierarchy
         public Node Root { get; private set; }
-        public Dictionary<ulong, Node> Nodes { get; set; }
+        public readonly Dictionary<ulong, Node> Nodes;
+        private readonly HashSet<Node> _pendingDestroyNodes = [];
 
 
         // systems
@@ -45,11 +46,17 @@ namespace Ignite
         public ComponentLookupTable Lookup { get; set; }
 
         // states
-        private bool _destroying = false;
+        private bool _isExiting = false;
+        public bool IsExiting => _isExiting;
+
+        private bool _isPaused = false;
+        public bool IsPaused => _isPaused;
+
 
         public World(IList<ISystem> systems)
         {
             Root = Node.CreateBuilder(this).ToNode();
+
 
             var pauseSystems = ImmutableHashSet.CreateBuilder<int>();
             var ignorePauseSystems = ImmutableHashSet.CreateBuilder<int>();
@@ -87,7 +94,7 @@ namespace Ignite
                 {
                     ContextId = context.Id,
                     Index = i,
-                    Order = i
+                    Order = i // maybe we can make an algo to check systems dependency on other systems
                 });
             }
 
@@ -99,10 +106,13 @@ namespace Ignite
 
             _cachedStartSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IStartSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IStartSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
+
             _cachedUpdateSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IUpdateSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IUpdateSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
+
             _cachedRenderSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IRenderSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IRenderSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
+
             _cachedExitSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IExitSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IExitSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
         }
@@ -115,7 +125,7 @@ namespace Ignite
             if (node.Parent == null)
                 node.SetParent(Root);
 
-            // O(n) loop, try optimize later
+            // O(n) loop, try optimize later maybe probably
             foreach ((int _, Context c) in _contexts)
             {
                 c.TryRegisterNode(node);
@@ -125,6 +135,21 @@ namespace Ignite
         internal void UnregisterNode(Node node)
         {
             Nodes.Remove(node.Id);
+        }
+
+        internal void TagForDestroy(Node node)
+        {
+            Nodes.Remove(node.Id);
+            // update tags on node id
+            _pendingDestroyNodes.Add(node);
+        }
+
+        private void DestroyPendingNodes()
+        {
+            foreach (var node in _pendingDestroyNodes)
+            {
+                node.Dispose();
+            }
         }
 
         /// <summary>
@@ -139,6 +164,7 @@ namespace Ignite
                 _systemsToResume.Add(id);
             }
 
+            _isPaused = true;
             OnPaused?.Invoke();
         }
 
@@ -154,14 +180,59 @@ namespace Ignite
             }
             _systemsToResume.Clear();
 
+            _isPaused = false;
             OnResumed?.Invoke();
         }
 
-        public void Destroy()
+        /// <summary>
+        /// Execute every registered <see cref="IStartSystem"/>
+        /// </summary>
+        public void Start()
         {
-            if (_destroying)
+            foreach ((IStartSystem system, int contextId) in _cachedStartSystem.Values)
+            {
+                system.Start(_contexts[contextId]);
+            }
+        }
+
+        /// <summary>
+        /// Execute every registered not paused <see cref="IUpdateSystem"/>
+        /// </summary>
+        public void Update()
+        {
+            foreach ((int systemId, (IUpdateSystem system, int contextId)) in _cachedUpdateSystem)
+            {
+                if (_isPaused && _pauseSystems.Contains(systemId))
+                    continue;
+
+                system.Update(_contexts[contextId]);
+            }
+        }
+
+        /// <summary>
+        /// Execute every registered <see cref="IRenderSystem"/>
+        /// </summary>
+        public void Render()
+        {
+            foreach ((IRenderSystem system, int contextId) in _cachedRenderSystem.Values)
+            {
+                system.Render(_contexts[contextId]);
+            }
+        }
+
+        /// <summary>
+        /// Execute every registered <see cref="IExitSystem"/>
+        /// </summary>
+        public void Exit()
+        {
+            if (_isExiting)
                 return;
-            _destroying = true;
+            _isExiting = true;
+
+            foreach ((IExitSystem system, int contextId) in _cachedExitSystem.Values)
+            {
+                system.Exit(_contexts[contextId]);
+            }
 
             Root.Destroy();
             OnDestroyed?.Invoke(this);
@@ -169,11 +240,12 @@ namespace Ignite
 
         public void Dispose()
         {
-            Destroy();
+            Exit();
 
             OnPaused = null;
             OnResumed = null;
             OnDestroyed = null;
         }
+
     }
 }

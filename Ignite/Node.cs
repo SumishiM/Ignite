@@ -147,24 +147,22 @@
 
         public virtual void Destroy()
         {
-            Dispose();
-        }
+            if (_pendingDestroy)
+                return;
 
-        public void Dispose()
-        {
-            if(_pendingDestroy)
-                return; 
-            
             _pendingDestroy = true;
 
             Disable();
 
+            World.TagForDestroy(this);
+        }
+
+        public void Dispose()
+        {
             RemoveAllComponents();
             DestroyChildren();
 
             _parent = null;
-            OnDestroyed?.Invoke(this);
-
             OnEnabled = null;
             OnDisabled = null;
             OnDestroyed = null;
@@ -174,6 +172,8 @@
             OnComponentAdded = null;
             OnComponentRemoved = null;
             OnComponentReplaced = null;
+
+            OnDestroyed?.Invoke(this);
 
             GC.SuppressFinalize(this);
         }
