@@ -1,6 +1,6 @@
 ﻿namespace Ignite.Systems
 {
-    public interface ISystem
+    public interface ISystem : IDisposable
     {
     }
 }
