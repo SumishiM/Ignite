@@ -42,10 +42,16 @@ namespace Ignite
         private readonly ImmutableHashSet<int> _ignorePauseSystems;
 
 
-
+        /// <summary>
+        /// Ids of <see cref="IStartSystem"/> initialized.
+        /// </summary>
         private readonly HashSet<int> _systemsInitialized;
 
         private readonly Dictionary<int, bool> _pendingToggleSystems;
+
+
+        private readonly Dictionary<int, Context> _contexts;
+
 
         /// <summary>
         /// Enable or disable every systems waiting to be toggled

@@ -25,7 +25,7 @@ namespace Ignite
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>
-            public Builder AddComponent<T>(T? component = null) where T : class, IComponent, new()
+            public Builder AddComponent<T>(T? component = default) where T : IComponent
                 => AddComponent(typeof(T), component);
 
             /// <summary>
@@ -49,7 +49,27 @@ namespace Ignite
                 return this;
             }
 
-            public Node ToNode() => this;
+            public Builder AddComponents(params IComponent[] components)
+            {
+                foreach (var component in components)
+                {
+                    AddComponent(component);
+                }
+
+                return this;
+            }
+
+            public Builder AddComponents(params Type[] components)
+            {
+                foreach (var component in components)
+                {
+                    AddComponent(component, null);
+                }
+
+                return this;
+            }
+
+            public Node ToNode() => (Node)this;
 
             public static implicit operator Node(Builder b)
             {

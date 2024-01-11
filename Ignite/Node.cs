@@ -98,8 +98,11 @@
             
             CheckIgnorePause();
             CheckRequiredComponents();
+        }
 
-            OnDestroyed += world.UnregisterNode;
+        public Node(Builder builder)
+        {
+            World = 
         }
 
         public virtual void Enable()
@@ -154,7 +157,7 @@
 
             Disable();
 
-            World.TagForDestroy(this);
+            World.TagNodeForDestroy(this);
         }
 
         public void Dispose()

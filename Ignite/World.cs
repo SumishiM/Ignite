@@ -17,18 +17,9 @@ namespace Ignite
     public partial class World : IDisposable
     {
         // events
-
         public Action<World>? OnDestroyed;
         public Action? OnPaused;
         public Action? OnResumed;
-
-        // Node / hierarchy
-        public Node Root { get; private set; }
-        public readonly Dictionary<ulong, Node> Nodes;
-        private readonly HashSet<ulong> _pendingDestroyNodes = [];
-
-
-        private readonly Dictionary<int, Context> _contexts;
 
         public ComponentLookupTable Lookup { get; set; }
 
@@ -104,46 +95,6 @@ namespace Ignite
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IExitSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
         }
 
-        internal void RegisterNode(Node node)
-        {
-            Debug.Assert(!Nodes.TryAdd(node.Id, node),
-                $"A node with this Id ({node.Id}) is already registered in the world !");
-
-            if (node.Parent == null)
-                node.SetParent(Root);
-
-            // O(n) loop, try optimize later maybe probably
-            foreach ((int _, Context c) in _contexts)
-            {
-                c.TryRegisterNode(node);
-            }
-        }
-
-        internal void UnregisterNode(Node node)
-        {
-            Nodes.Remove(node.Id);
-        }
-
-        internal void TagForDestroy(Node node)
-        {
-            // update tags on node id
-            _pendingDestroyNodes.Add(node.Id);
-        }
-
-        private void DestroyPendingNodes()
-        {
-            ImmutableArray<ulong> pendingDestroy = _pendingDestroyNodes.ToImmutableArray();
-            _pendingDestroyNodes.Clear();
-
-            foreach (var id in pendingDestroy)
-            {
-                Node node = Nodes[id];
-                Nodes.Remove(id);
-                node.Dispose();
-            }
-        }
-
-
         /// <summary>
         /// Pause systems that can be paused. Those systems will be disabled at the end of the frame.
         /// </summary>
@@ -185,9 +136,10 @@ namespace Ignite
         /// </summary>
         public void Start()
         {
-            foreach ((IStartSystem system, int contextId) in _cachedStartSystems.Values)
+            foreach (var (id, (system, contextId)) in _cachedStartSystems)
             {
                 system.Start(_contexts[contextId]);
+                _systemsInitialized.Add(id);
             }
         }
 
@@ -196,9 +148,9 @@ namespace Ignite
         /// </summary>
         public void Update()
         {
-            foreach (var (systemId, (system, contextId)) in _cachedUpdateSystems)
+            foreach (var (id, (system, contextId)) in _cachedUpdateSystems)
             {
-                if (_isPaused && _pauseSystems.Contains(systemId))
+                if (_isPaused && _pauseSystems.Contains(id))
                     continue;
 
                 Context context = _contexts[contextId];
@@ -214,7 +166,7 @@ namespace Ignite
         /// </summary>
         public void Render()
         {
-            foreach ((IRenderSystem system, int contextId) in _cachedRenderSystems.Values)
+            foreach (var (_, (system, contextId)) in _cachedRenderSystems)
             {
                 system.Render(_contexts[contextId]);
             }
@@ -227,9 +179,10 @@ namespace Ignite
         {
             if (_isExiting)
                 return;
+
             _isExiting = true;
 
-            foreach ((IExitSystem system, int contextId) in _cachedExitSystem.Values)
+            foreach (var (system, contextId) in _cachedExitSystem.Values)
             {
                 system.Exit(_contexts[contextId]);
             }
@@ -245,6 +198,16 @@ namespace Ignite
             OnPaused = null;
             OnResumed = null;
             OnDestroyed = null;
+
+            foreach (var node in Nodes.Values)
+            {
+                node.Dispose();
+            }
+
+            foreach (var context in _contexts.Values)
+            {
+                context.Dispose();
+            }
 
             GC.SuppressFinalize(this);
         }
