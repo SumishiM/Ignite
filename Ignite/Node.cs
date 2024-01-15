@@ -15,7 +15,7 @@
         /// <summary>
         /// Unique Id for the node in the world
         /// </summary>
-        internal ulong Id;
+        public ulong Id;
 
         private bool _isActive = true;
         public bool IsActive => _isActive;
@@ -32,6 +32,7 @@
         public bool IgnorePause { get; private set; } = false;
 
         public World World { get; private set; }
+        public string Name { get; set; } = "Unnamed Node";
 
         [System.Flags]
         public enum Flags : ulong
@@ -88,21 +89,16 @@
             public static implicit operator ulong(UID id) => id.Id;
         }
 
-        public Node(World world)
+        public Node(World world, string name = "Unnamed Node")
         {
             World = world;
             _lookup = world.Lookup;
+            Name = name;
 
-            Id = new UID();
-            world.RegisterNode(this);
+            Id = UID.Next();
             
             CheckIgnorePause();
             CheckRequiredComponents();
-        }
-
-        public Node(Builder builder)
-        {
-            World = 
         }
 
         public virtual void Enable()

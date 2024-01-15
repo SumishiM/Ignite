@@ -65,10 +65,10 @@ namespace Ignite.Systems
         /// <summary>
         /// Components sorted by <see cref="AccessKind"/>
         /// </summary>
-        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _componentsAccesses;
+        private readonly ImmutableDictionary<AccessKind, ImmutableHashSet<int>> _componentsAccess;
 
-        internal ImmutableHashSet<int> ReadComponents => _componentsAccesses[AccessKind.Read];
-        internal ImmutableHashSet<int> WriteComponents => _componentsAccesses[AccessKind.Write];
+        internal ImmutableHashSet<int> ReadComponents => _componentsAccess[AccessKind.Read];
+        internal ImmutableHashSet<int> WriteComponents => _componentsAccess[AccessKind.Write];
 
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
@@ -81,7 +81,46 @@ namespace Ignite.Systems
             _nodes = [];
             var filters = CreateFilters(system);
             _targetComponents = CreateTargetComponents(filters);
-            _componentsAccesses = CreateOperationsKind(filters);
+            _componentsAccess = CreateOperationsKind(filters);
+
+            _id = GetOrCreateId();
+        }
+
+        public Context(World world, AccessFilter filter, params int[] components)
+        {
+            _targetComponents = new Dictionary<AccessFilter, ImmutableArray<int>>()
+            {
+                { filter, components.ToImmutableArray() }
+            }.ToImmutableDictionary();
+
+            _componentsAccess = ImmutableDictionary<AccessKind, ImmutableHashSet<int>>.Empty;
+
+            _id = GetOrCreateId();
+        }
+
+        private int GetOrCreateId()
+        {
+            List<int> components = new();
+            var orderedComponentsFilter = _targetComponents.OrderBy(kvp => kvp.Key);
+
+            foreach (var (filter, collection) in orderedComponentsFilter)
+            {
+                components.Add(-(int)filter);
+                components.AddRange(collection.Sort());
+            }
+
+            // hash
+
+            int result = 0;
+            int shift = 0;
+
+            foreach (var v in components)
+            {
+                shift = (shift + 11) % 21;
+                result ^= (v + 1024) << shift;
+            }
+
+            return result;
         }
 
         /// <summary>

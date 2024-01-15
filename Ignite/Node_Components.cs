@@ -177,7 +177,6 @@ namespace Ignite
                 $"Try AddOrReplaceComponent instead.");
 
             Components[_lookup[component.GetType()]] = component;
-            component.Node = this;
             OnComponentAdded?.Invoke(this, _lookup[component]);
             return this;
         }
@@ -211,7 +210,6 @@ namespace Ignite
             if (Components.ContainsKey(index))
             {
                 Components[index] = component;
-                component.Node = this;
 
                 //OnComponentReplaced?.Invoke(this, index, component);
 
@@ -219,7 +217,6 @@ namespace Ignite
             }
 
             Components[_lookup[component.GetType()]] = component;
-            component.Node = this;
 
             OnComponentAdded?.Invoke(this, _lookup[component]);
 

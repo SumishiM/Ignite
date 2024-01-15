@@ -33,7 +33,11 @@ namespace Ignite
 
         public World(IList<ISystem> systems)
         {
-            Root = Node.CreateBuilder(this).ToNode();
+            Nodes = [];
+            Lookup = new ComponentLookupTable();
+
+            _systemsInitialized = [];
+            _pendingToggleSystems = [];
 
 
             var pauseSystems = ImmutableHashSet.CreateBuilder<int>();
@@ -93,6 +97,9 @@ namespace Ignite
 
             _cachedExitSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IExitSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IExitSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
+
+
+            Root = Node.CreateBuilder(this, "Root").ToNode();
         }
 
         /// <summary>

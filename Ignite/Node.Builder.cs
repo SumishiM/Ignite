@@ -5,21 +5,25 @@ namespace Ignite
 {
     public partial class Node
     {
-        public static Builder CreateBuilder(World world)
-            => new (world);
+        public static Builder CreateBuilder(World world, string name = "Unnamed Node")
+            => new(world, name);
 
         public sealed class Builder
         {
             private readonly World _world;
+            public World World => _world;
+            public string Name { get; set; } = "Unnamed Node";
 
             public Node? Parent { get; set; }
             private readonly List<Node> _children = [];
             private readonly List<Type> _componentsTypes = [];
             private readonly List<IComponent> _components = [];
 
-            public Builder(World world)
+            public Builder(World world, string name = "Unnamed Node", Node? parent = null)
             {
                 _world = world;
+                Name = name;
+                Parent = parent ?? world.Root;
             }
 
             /// <summary>
@@ -31,9 +35,9 @@ namespace Ignite
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/> or add a given existing component.
             /// </summary>
-            public Builder AddComponent(Type type, IComponent? component = null) 
+            public Builder AddComponent(Type type, IComponent? component = null)
             {
-                Debug.Assert(typeof(IComponent).IsAssignableFrom(type), 
+                Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
                     $"Whay are we trying to add a component that isn't a IComponent ?");
 
                 if (component == null)
@@ -73,8 +77,13 @@ namespace Ignite
 
             public static implicit operator Node(Builder b)
             {
+
                 Node node = new(b._world);
-                node.SetParent(b.Parent);
+                node.Name = b.Name;
+
+                if (node.Id != 1)
+                    b.Parent!.AddChild(node);
+
                 node.AddChildren(b._children);
 
                 foreach (IComponent component in b._components)
@@ -87,7 +96,6 @@ namespace Ignite
                     node.AddComponent(type);
                 }
 
-                node.Id = UID.Next();
                 b._world.RegisterNode(node);
 
                 return node;

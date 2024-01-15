@@ -212,5 +212,22 @@ namespace Ignite
             if (system is IUpdateSystem) _cachedUpdateSystems.Remove(id);
             if (system is IRenderSystem) _cachedRenderSystems.Remove(id);
         }
+
+        private int GetOrCreateContext(Context.AccessFilter filter, params int[] components)
+        {
+            Context context = new Context(this, filter, components);
+            if( _contexts.ContainsKey(context.Id))
+            {
+                return context.Id;
+            }
+
+            foreach (var (_, node) in Nodes)
+            {
+                context.TryRegisterNode(node);
+            }
+
+            _contexts.Add(context.Id, context);
+            return context.Id;
+        }
     }
 }

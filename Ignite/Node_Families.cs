@@ -24,8 +24,14 @@ namespace Ignite
         /// </summary>
         public void SetParent(Node? parent)
         {
-            // todo : set _parent a world.root if parent null
-            _parent = parent;
+            if(_parent != null && _parent != parent)
+                _parent.RemoveChild(this);
+
+            if (parent == null)
+                parent = World.Root;
+            else
+                _parent = parent;
+            
             OnParentChanged?.Invoke(this, parent);
         }
 

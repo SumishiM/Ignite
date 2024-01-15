@@ -12,47 +12,45 @@ namespace Ignite
         public readonly Dictionary<ulong, Node> Nodes;
         private readonly HashSet<ulong> _pendingDestroyNodes = [];
 
-        public Node AddNode() => AddNode(Array.Empty<IComponent>());
+        public Node AddNode(string name = "Unnamed Node") => AddNode(name, Array.Empty<IComponent>());
 
-        public Node AddNode(params IComponent[] components)
+        public Node AddNode(string name = "Unnamed Node", params IComponent[] components)
         {
-            var builder = Node.CreateBuilder(this);
+            var builder = Node.CreateBuilder(this, name);
 
             builder.AddComponents(components);
 
             return builder.ToNode();
         }
 
-        public Node AddNode(params Type[] components)
+        public Node AddNode(string name = "Unnamed Node", params Type[] components)
         {
-            var builder = Node.CreateBuilder(this);
+            var builder = Node.CreateBuilder(this, name);
 
             builder.AddComponents(components);
 
             return builder.ToNode();
-        }
-
-        public ImmutableArray<Node> GetNodesWith(params int[] components)
-        {
-
-            Context context = GetOrCreateContext(components);
-            return context.Nodes;
         }
 
         public ImmutableArray<Node> GetNodesWith(params Type[] components)
         {
+            return GetNodesWith(Context.AccessFilter.AllOf, components);
+        }
 
-            Context context = GetOrCreateContext(components);
-            return context.Nodes;
+        public ImmutableArray<Node> GetNodesWith(Context.AccessFilter filter, params Type[] components)
+        {
+            int id = GetOrCreateContext(filter, components.Select(t => Lookup.GetIndex(t)).ToArray());
+            return _contexts[id].Nodes;
         }
 
         internal void RegisterNode(Node node)
         {
-            Debug.Assert(!Nodes.TryAdd(node.Id, node),
+            if (Root == null) return;
+            Debug.Assert(Nodes.TryAdd(node.Id, node),
                 $"A node with this Id ({node.Id}) is already registered in the world !");
 
             if (node.Parent == null)
-                node.SetParent(Root);
+                Root.AddChild(node);
 
             // O(n) loop, try optimize later maybe probably
             foreach ((int _, Context c) in _contexts)
