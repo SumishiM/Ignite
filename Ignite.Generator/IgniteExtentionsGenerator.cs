@@ -1,78 +1,47 @@
 ﻿using Ignite.Generator.Extentions;
 using Ignite.Generator.Metadata;
 using Ignite.Generator.Templating;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit { }
+}
+
 namespace Ignite.Generator
 {
-    internal class IgniteExtentionsGenerator : IIncrementalGenerator
+    [Generator]
+    public sealed class IgniteExtentionGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var potentialComponents = context.PotentialComponents().Collect();
-            var compilation = potentialComponents
-                .Combine(context.CompilationProvider);
 
-            context.RegisterSourceOutput(compilation, (c, t) => Execute(c, t.Right, t.Left));
+            var compilation = context.CompilationProvider.Combine(potentialComponents);
+
+            context.RegisterSourceOutput(compilation,
+                (context, source) => Execute(context, source.Left, source.Right));
         }
 
-        public void Execute(
+        private void Execute(
             SourceProductionContext context,
             Compilation compilation,
-            ImmutableArray<TypeDeclarationSyntax> potentialComponents)
+            ImmutableArray<TypeDeclarationSyntax> components)
         {
-            var igniteTypeSymbols = IgniteTypeSymbols.FromCompilation(compilation);
-            if (igniteTypeSymbols is null)
-                return;
-
-            var referencedAssemblyTypeFetcher = new ReferencedAssemblyTypeFetcher(compilation);
-            var parentLookupTableClass = referencedAssemblyTypeFetcher
-                .GetAllCompiledClassesWithSubtypes()
-                .Where(t => t.IsSubclassOf(igniteTypeSymbols.ComponentLookupClass))
-                .OrderBy(NumberOfParentClasses)
-                .LastOrDefault() ?? igniteTypeSymbols.ComponentLookupClass;
-
-            var projectName = compilation.AssemblyName?.Replace(".", "") ?? "My";
-
-            var metadataFetcher = new MetadataFetcher(compilation);
-
-            var templates = ImmutableArray.Create(
-                Templates.ComponentTypes(projectName),
-                Templates.LookupImplementation(projectName)
-            );
-
-            var projectMetaData = new TypeMetadata.Project(
-                projectName,
-                parentLookupTableClass.Name.Replace("ComponentLookupTable", ""),
-                parentLookupTableClass.FullTypeName());
-
-            foreach (var template in templates)
-            {
-                template.Process(projectMetaData);
-            }
-
-            var allTypeMetadata =
-                metadataFetcher.FetchMetadata(
-                    igniteTypeSymbols,
-                    potentialComponents);
-
-            foreach (var metadata in allTypeMetadata)
-            {
-                foreach (var template in templates)
+            var code =
+                """
+                namespace Ignite.Generated;
+                
+                public static class ClassNames
                 {
-                    template.Process(metadata);
+                    public static string Message = "Hello from Ignite";
                 }
-            }
+                """;
 
-            foreach (FileTemplate template in templates)
-            {
-                context.AddSource(template.FileName, template.GetDocumentWithreplacements());
-            }
+            context.AddSource("ClassNames.g.cs", code);
         }
-
-        private static int NumberOfParentClasses(INamedTypeSymbol typeSymbol)
-            => typeSymbol.BaseType is null ? 0 : 1 + NumberOfParentClasses(typeSymbol.BaseType);
     }
 }

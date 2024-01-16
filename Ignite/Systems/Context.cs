@@ -40,7 +40,7 @@ namespace Ignite.Systems
         /// <summary>
         /// Nodes tracked by the context
         /// </summary>
-        private readonly Dictionary<ulong, Node> _nodes;
+        private readonly Dictionary<ulong, Node> _nodes = [];
 
         public ImmutableArray<Node> Nodes
         {
@@ -78,7 +78,6 @@ namespace Ignite.Systems
         {
             _lookup = world.Lookup;
 
-            _nodes = [];
             var filters = CreateFilters(system);
             _targetComponents = CreateTargetComponents(filters);
             _componentsAccess = CreateOperationsKind(filters);
@@ -88,6 +87,8 @@ namespace Ignite.Systems
 
         public Context(World world, AccessFilter filter, params int[] components)
         {
+            _lookup = world.Lookup;
+
             _targetComponents = new Dictionary<AccessFilter, ImmutableArray<int>>()
             {
                 { filter, components.ToImmutableArray() }
