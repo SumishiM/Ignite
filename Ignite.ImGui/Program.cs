@@ -19,8 +19,10 @@ namespace Ignite.UI
         const int SW_SHOW = 5;
         bool isOpen = true;
         bool isPercistentWorldTabOpen = true;
+        bool isSceneWorldTabOpen = true;
 
-        World world;
+        World _percistentWorld;
+        World _sceneWorld;
 
 
         static void Main(string[] args)
@@ -33,21 +35,27 @@ namespace Ignite.UI
 
             Program program = new();
 
-            program.world = new World(Array.Empty<ISystem>());
+            World percistentWorld = new(Array.Empty<ISystem>());
+            //World sceneWorld = new(Array.Empty<ISystem>());
+            program._percistentWorld = percistentWorld;
+            //program._sceneWorld = sceneWorld;
 
-            Node player = program.world.AddNode("Player");
-            Node renderer = program.world.AddNode("Renderer");
-            Node controller = program.world.AddNode("Controller");
+            Node.Builder playerBuilder = new Node.Builder(program._percistentWorld, "Player");
 
-            controller
-                .AddComponent<Move>()
-                .AddComponent<Jump>();
+            Node player = percistentWorld.AddNode(playerBuilder);
+            Node renderer = percistentWorld.AddNode("Renderer");
+            Node controller = percistentWorld.AddNode("Controller");
+
+            //controller
+            //    .AddComponent<Move>()
+            //    .AddComponent<Jump>();
 
             player
-                .AddChild(renderer)
-                .AddChild(controller);
+                .AddChild(controller)
+                .AddChild(renderer);
 
-            program.world.Start();
+            percistentWorld.Start();
+            //sceneWorld.Start();
 
             program.Start().Wait();
             program.Position = new System.Drawing.Point(0, 0);
@@ -71,8 +79,11 @@ namespace Ignite.UI
             style.Colors[(int)ImGuiCol.ButtonHovered] = new Vector4(0, 0, 0, 0.2f);
             style.Colors[(int)ImGuiCol.ButtonActive] = titleBgColor;
             style.Colors[(int)ImGuiCol.Button] = titleBgColor;
+            style.Colors[(int)ImGuiCol.Tab] = bgColor * 3f;
+            style.Colors[(int)ImGuiCol.TabActive] = titleBgColor;
+            style.Colors[(int)ImGuiCol.TabHovered] = titleBgColor * 0.8f;
 
-            style.Colors[(int)ImGuiCol.MenuBarBg] = bgColor * 1.5f;
+            style.Colors[(int)ImGuiCol.MenuBarBg] = bgColor * 2f;
 
             style.Colors[(int)ImGuiCol.Text] = textColor;
             style.Colors[(int)ImGuiCol.TextSelectedBg] = borderColor;
@@ -108,15 +119,28 @@ namespace Ignite.UI
                     if (ImGui.MenuItem("Exit", "Escape")) { isOpen = false; Close(); Console.WriteLine("Close."); }
                     ImGui.EndMenu();
                 }
+                if (ImGui.BeginMenu("Nodes"))
+                {
+                    if (ImGui.MenuItem("Add", "Ctrl+N")) { AddNodePopup(); }
+                    ImGui.EndMenu();
+                }
                 ImGui.EndMenuBar();
             }
 
             if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.Reorderable | ImGuiTabBarFlags.FittingPolicyScroll | ImGuiTabBarFlags.FittingPolicyResizeDown))
             {
-                if (ImGui.BeginTabItem("Percistent World", ref isPercistentWorldTabOpen,
-                    ImGuiTabItemFlags.NoCloseWithMiddleMouseButton | ImGuiTabItemFlags.SetSelected))
+                if (ImGui.BeginTabItem("Percistent World", ref isPercistentWorldTabOpen, 
+                    ImGuiTabItemFlags.NoCloseWithMiddleMouseButton | ImGuiTabItemFlags.NoAssumedClosure))
                 {
-                    ShowNodeHierarchy(world.Root, 0);
+                    ShowNodeHierarchy(_percistentWorld.Root, 0);
+
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Scene World", ref isSceneWorldTabOpen,
+                    ImGuiTabItemFlags.NoCloseWithMiddleMouseButton))
+                {
+                    //ShowNodeHierarchy(_sceneWorld.Root, 0);
 
                     ImGui.EndTabItem();
                 }
@@ -153,6 +177,16 @@ namespace Ignite.UI
 
                 }
             }
+        }
+
+        private void AddNodePopup()
+        {
+            if(ImGui.BeginPopup("Add Node"))
+            {
+                
+            }
+
+            ImGui.EndPopup();
         }
     }
 }

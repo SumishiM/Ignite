@@ -12,6 +12,11 @@ namespace Ignite
         public readonly Dictionary<ulong, Node> Nodes;
         private readonly HashSet<ulong> _pendingDestroyNodes = [];
 
+        public Node AddNode(Node.Builder builder)
+        {
+            return builder.ToNode();
+        }
+
         public Node AddNode(string name = "Unnamed Node") => AddNode(name, Array.Empty<IComponent>());
 
         public Node AddNode(string name = "Unnamed Node", params IComponent[] components)
