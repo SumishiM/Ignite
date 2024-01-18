@@ -1,8 +1,6 @@
 ﻿using Ignite.Generator.Metadata;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
+
 using static Ignite.Generator.Templating.TemplateSubstitution;
 
 namespace Ignite.Generator.Templating
@@ -23,15 +21,16 @@ namespace Ignite.Generator.Templating
             _substitutions = substitutions;
         }
 
-        public static FileTemplate ComponentLookupTableImplementation(string projectName) 
+        public static FileTemplate ComponentLookupTableImplementation(string projectName)
             => new($"{projectName}ComponentLookupTable.g.cs",
                 Templates.ComponentLookupTableImplementationRaw,
                 ImmutableArray.Create<TemplateSubstitution>(
                     new ProjectNameSubstitution(),
+                    new ParentProjectLookupTableSubstitution(),
                     new ComponentTypeToIndexSubstitution()));
 
         public static FileTemplate ProjectComponentsImplementation(string projectName)
-            => new($"{projectName}ComponentTypes.g.cs",
+            => new($"{projectName}Components.g.cs",
                 Templates.ComponentTypesRaw,
                 ImmutableArray.Create<TemplateSubstitution>(
                     new ProjectNameSubstitution(),

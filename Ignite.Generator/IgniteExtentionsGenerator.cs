@@ -5,8 +5,6 @@ using Ignite.Generator.Templating;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 
 namespace Ignite.Generator
@@ -65,6 +63,11 @@ namespace Ignite.Generator
                 FileTemplate.ComponentLookupTableImplementation(projectName),
                 FileTemplate.ProjectComponentsImplementation(projectName)
             );
+
+            foreach (var template in templates)
+            {
+                template.Process(projectMetadata);
+            }
 
             var allTypeMetadata = metadataFetcher.Fetch(igniteTypesSymbols, potentialComponents);
 

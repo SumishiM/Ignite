@@ -7,7 +7,7 @@ namespace Ignite.Generator.Metadata
         public sealed record Project(
             string ProjectName,
             string? ParentProjectName,
-            string ParentProjectComponentLookupTableClass
+            string ParentProjectComponentLookupTable
             ) : TypeMetadata;
 
         public sealed record Component(

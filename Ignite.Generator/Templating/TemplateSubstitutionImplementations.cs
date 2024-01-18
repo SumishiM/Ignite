@@ -1,6 +1,4 @@
 ﻿using Ignite.Generator.Metadata;
-using Microsoft.CodeAnalysis;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Ignite.Generator.Templating
 {
@@ -20,22 +18,31 @@ namespace Ignite.Generator.Templating
 
             protected override string? ProcessComponent(TypeMetadata.Component component)
                 => $$"""
-                            { typeof(global::{{component.FullName}}), {{Templates.GeneratedCodeNamespace}}.{{_projectName}}ComponentTypes.{{component.Name}} },
+                            { typeof(global::{{component.FullName}}), global::{{Templates.GeneratedCodeNamespace}}.{{_projectName}}Components.{{component.Name}} },
+                
                 """;
         }
+
         internal sealed class ComponentIndexSubstitution : TemplateSubstitution
         {
             public ComponentIndexSubstitution() : base(Templates.ComponentIndexListToken) { }
 
             protected override string? ProcessComponent(TypeMetadata.Component component)
             {
-                string id = $"global::Ignite.Components.{_parentProjectName}ComponentLookupTable.{_parentProjectName}NextLookupId + {component.Index}";
+                string id = $"global::Ignite.{(string.IsNullOrEmpty(_parentProjectName) ? "Components" : "Generated")}.{_parentProjectName}ComponentLookupTable.{_parentProjectName}NextLookupId + {component.Index}";
                 return $$"""
                     public static int {{component.Name}} = {{id}};
+
                 """;
             }
+        }
 
+        internal sealed class ParentProjectLookupTableSubstitution : TemplateSubstitution
+        {
+            public ParentProjectLookupTableSubstitution() : base(Templates.ParentComponentLookupTable) { }
 
+            protected override string? ProcessProject(TypeMetadata.Project project)
+            => $"global::{project.ParentProjectComponentLookupTable}";
         }
     }
 }

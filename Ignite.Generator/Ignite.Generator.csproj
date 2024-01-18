@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<AssemblyName>Ignite.Generator</AssemblyName>
+		<RootNamespace>Ignite.Generator</RootNamespace>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>11</LangVersion>
 		

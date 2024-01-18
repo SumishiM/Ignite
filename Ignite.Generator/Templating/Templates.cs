@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ignite.Generator.Templating
+﻿namespace Ignite.Generator.Templating
 {
     public partial class Templates
     {
-        public const string GeneratedCodeNamespace = "global::Ignite.Generated";
+        public const string GeneratedCodeNamespace = "Ignite.Generated";
         public const string ProjectNameToken = "<project_name>";
         public const string ComponentIndexListToken = "<component_index_list>";
         public const string ComponentTypeToIndexToken = "<component_type_to_index>";
@@ -14,6 +10,9 @@ namespace Ignite.Generator.Templating
 
         public const string ComponentLookupTableImplementationRaw =
             $$"""
+            using System.Collections;
+            using System.Collections.Immutable;
+
             namespace {{GeneratedCodeNamespace}};
 
             public class {{ProjectNameToken}}ComponentLookupTable : {{ParentComponentLookupTable}}
@@ -26,9 +25,9 @@ namespace Ignite.Generator.Templating
                 }
 
                 private readonly ImmutableDictionary<Type, int> _{{ProjectNameToken}}ComponentsIndex = 
-                new Dictionary<Type, int>()
+                    new Dictionary<Type, int>()
                     {
-            {{ComponentTypeToIndexToken}}           }
+            {{ComponentTypeToIndexToken}}        }
                     .ToImmutableDictionary();
             }
             """;
