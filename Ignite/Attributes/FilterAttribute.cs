@@ -1,5 +1,5 @@
-﻿using Ignite.Systems;
-using System.ComponentModel;
+﻿using Ignite.Components;
+using Ignite.Systems;
 using System.Diagnostics;
 
 namespace Ignite.Attributes

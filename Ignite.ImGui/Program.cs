@@ -34,7 +34,15 @@ namespace Ignite.UI
             Console.WriteLine("Starting ImGui ...");
 
             Program program = new();
-            World percistentWorld = new(new List<ISystem>() { new MoveSystem() });
+
+            World percistentWorld = new(new List<ISystem>()
+            {
+                new SetStartMoveSystem(),
+                new UpdateMoveSystem(),
+                new SetExitMoveSystem()
+            });
+
+
             //World sceneWorld = new(Array.Empty<ISystem>());
             program._percistentWorld = percistentWorld;
             //program._sceneWorld = sceneWorld;
@@ -111,12 +119,27 @@ namespace Ignite.UI
         {
             ImGui.SetNextWindowSize(new Vector2(1080, 720));
             ImGui.Begin("Ignite", ref isOpen, ImGuiWindowFlags.MenuBar);
-
+            _percistentWorld.Update();
             if (ImGui.BeginMenuBar())
             {
                 if (ImGui.BeginMenu("File"))
                 {
-                    if (ImGui.MenuItem("Exit", "Escape")) { isOpen = false; Close(); Console.WriteLine("Close."); }
+                    if (ImGui.MenuItem("Exit", "Escape"))
+                    {
+                        isOpen = false;
+                        Close();
+                        _percistentWorld.Exit();
+                        //_sceneWorld.Exit();
+                    }
+                    if (ImGui.MenuItem("Toggle Pause", "Pause"))
+                    {
+                        if (_percistentWorld.IsPaused)
+                            _percistentWorld.Resume();
+                        else
+                            _percistentWorld.Pause();
+
+                        //_sceneWorld.Exit();
+                    }
                     ImGui.EndMenu();
                 }
                 if (ImGui.BeginMenu("Nodes"))
@@ -129,7 +152,7 @@ namespace Ignite.UI
 
             if (ImGui.BeginTabBar("Tabs", ImGuiTabBarFlags.Reorderable | ImGuiTabBarFlags.FittingPolicyScroll | ImGuiTabBarFlags.FittingPolicyResizeDown))
             {
-                if (ImGui.BeginTabItem("Percistent World", ref isPercistentWorldTabOpen, 
+                if (ImGui.BeginTabItem("Percistent World", ref isPercistentWorldTabOpen,
                     ImGuiTabItemFlags.NoCloseWithMiddleMouseButton | ImGuiTabItemFlags.NoAssumedClosure))
                 {
                     ShowNodeHierarchy(_percistentWorld.Root, 0);
@@ -181,7 +204,7 @@ namespace Ignite.UI
 
         private void AddNodePopup()
         {
-            if(ImGui.BeginPopup("Add Node"))
+            if (ImGui.BeginPopup("Add Node"))
             {
 
             }
