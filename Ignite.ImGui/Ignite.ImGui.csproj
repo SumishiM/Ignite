@@ -17,6 +17,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Ignite\Ignite.csproj" />
+		<ProjectReference Include="..\Ignite.Generator\Ignite.Generator.csproj">
+			<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+			<OutputItemType>Analyzer</OutputItemType>
+		</ProjectReference>
 	</ItemGroup>
 
 </Project>

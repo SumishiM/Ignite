@@ -13,11 +13,28 @@ namespace Ignite.Generator.Extentions
             => symbol.AllInterfaces
                 .Any(interfaceSymbol => SymbolEqualityComparer.Default.Equals(interfaceSymbol, interfaceToCheck));
 
+        public static bool IsSubclassOf(this INamedTypeSymbol symbol, INamedTypeSymbol typeToCheck)
+        {
+            ITypeSymbol? nextTypeToVerify = symbol;
+            do
+            {
+                var subtype = nextTypeToVerify?.BaseType;
+                if (subtype is not null && SymbolEqualityComparer.Default.Equals(subtype, typeToCheck))
+                {
+                    return true;
+                }
+
+                nextTypeToVerify = subtype;
+
+            } while (nextTypeToVerify is not null);
+
+            return false;
+        }
+
         public static IEnumerable<T> Yield<T>(this T obj)
         {
             yield return obj;
         }
-
 
         private static readonly SymbolDisplayFormat _fullNameDisplayFormat =
             new(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
@@ -31,6 +48,7 @@ namespace Ignite.Generator.Extentions
 
             var genericTypes = string.Join(", ",
                 namedTypeSymbol.TypeArguments.Select(x => $"global::{x.FullName()}"));
+
             return $"{fullTypeName}<{genericTypes}>";
         }
 

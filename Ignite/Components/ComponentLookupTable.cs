@@ -5,12 +5,8 @@ namespace Ignite.Components
 {
     public class ComponentLookupTable
     {
-        private readonly ImmutableDictionary<Type, int> _componentsIndex =
-            new Dictionary<Type, int>()
-            {
-                { typeof(IComponent), 0 } 
-            }
-            .ToImmutableDictionary();
+        protected readonly ImmutableDictionary<Type, int> _componentsIndex =
+            new Dictionary<Type, int>() { }.ToImmutableDictionary();
 
         /// <summary>
         /// Get the index of the component of <see cref="Type"/> <paramref name="type"/>.
