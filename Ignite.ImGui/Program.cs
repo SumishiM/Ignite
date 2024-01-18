@@ -34,8 +34,7 @@ namespace Ignite.UI
             Console.WriteLine("Starting ImGui ...");
 
             Program program = new();
-
-            World percistentWorld = new(Array.Empty<ISystem>());
+            World percistentWorld = new(new List<ISystem>() { new MoveSystem() });
             //World sceneWorld = new(Array.Empty<ISystem>());
             program._percistentWorld = percistentWorld;
             //program._sceneWorld = sceneWorld;
@@ -46,13 +45,14 @@ namespace Ignite.UI
             Node renderer = percistentWorld.AddNode("Renderer");
             Node controller = percistentWorld.AddNode("Controller");
 
-            //controller
-            //    .AddComponent<Move>()
-            //    .AddComponent<Jump>();
+            player
+                .AddComponent<Move>()
+                .AddComponent<Jump>();
 
             player
                 .AddChild(controller)
                 .AddChild(renderer);
+
 
             percistentWorld.Start();
             //sceneWorld.Start();
@@ -155,7 +155,7 @@ namespace Ignite.UI
             string indents = string.Empty;
             for (int i = 0; i < depth; i++)
             {
-                indents += "\t";
+                indents += "  ";
             }
 
             ImGui.Text($"{indents}{root.Name} | ID: {root.Id}");
@@ -170,10 +170,10 @@ namespace Ignite.UI
 
             if (root.Components.Count != 0)
             {
-                ImGui.Text($"Components : {root.Components.Count}");
+                ImGui.Text($"{indents}  [Components : {root.Components.Count}]");
                 foreach (var (id, component) in root.Components)
                 {
-                    ImGui.Text($"{indents}\t{component.GetType()} | ID: {id}");
+                    ImGui.Text($"{indents}  - {component.GetType()} | ID: {id}");
 
                 }
             }
@@ -183,7 +183,7 @@ namespace Ignite.UI
         {
             if(ImGui.BeginPopup("Add Node"))
             {
-                
+
             }
 
             ImGui.EndPopup();
