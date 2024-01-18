@@ -1,6 +1,6 @@
 ﻿namespace Ignite.Systems
 {
-    public interface IRenderSystem
+    public interface IRenderSystem : ISystem
     {
         void Render(Context context);
     }

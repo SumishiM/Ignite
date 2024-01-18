@@ -34,7 +34,7 @@ namespace Ignite
         public World(IList<ISystem> systems)
         {
             Nodes = [];
-            Lookup = new ComponentLookupTable();
+            Lookup = FindLookupTableImplementation();
 
             _systemsInitialized = [];
             _pendingToggleSystems = [];

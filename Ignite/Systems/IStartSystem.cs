@@ -1,6 +1,6 @@
 ﻿namespace Ignite.Systems
 {
-    public interface IStartSystem
+    public interface IStartSystem : ISystem
     {
         void Start(Context context);
     }

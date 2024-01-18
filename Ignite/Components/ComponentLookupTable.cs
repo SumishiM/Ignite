@@ -18,14 +18,14 @@ namespace Ignite.Components
         /// <returns>Index of the component</returns>
         // todo : Change GetIndex by GetOrCreateIndex ? 
         // should not be an issue with the generator tbh
-        public int this[Type type] => GetIndex(type);
+        public int this[Type type] => GetOrCreateIndex(type);
 
         /// <summary>
         /// Get the index of the <paramref name="component"/>.
         /// See <see cref="Ignite.Components.ComponentLookupTable.GetIndex(Type)"/>
         /// </summary>
         /// <returns>Index of the <paramref name="component"/></returns>
-        public int this[IComponent component] => GetIndex(component.GetType());
+        public int this[IComponent component] => GetOrCreateIndex(component.GetType());
 
         /// <summary>
         /// Get the index of the component of <see cref="Type"/> <typeparamref name="T"/>
