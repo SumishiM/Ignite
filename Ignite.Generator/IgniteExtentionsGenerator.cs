@@ -5,11 +5,9 @@ using Ignite.Generator.Templating;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit { }
-}
 
 namespace Ignite.Generator
 {
@@ -31,6 +29,14 @@ namespace Ignite.Generator
             Compilation compilation,
             ImmutableArray<TypeDeclarationSyntax> components)
         {
+            var igniteTypesSymbols = IgniteTypesSymbols.FromCompilation(compilation);
+            var projectName = compilation.AssemblyName?.Replace(".", "") ?? "My";
+            var projectMetadata = new TypeMetadata.Project(
+                projectName, null, string.Empty);
+
+
+
+
             var code =
                 """
                 namespace Ignite.Generated;

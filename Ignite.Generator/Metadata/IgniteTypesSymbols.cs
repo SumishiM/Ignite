@@ -18,7 +18,7 @@ namespace Ignite.Generator.Metadata
             ComponentLookupTableTypeSymbol = componentLookupTableTypeSymbol;
         }
 
-        public IgniteTypesSymbols? FromCompilation(Compilation compilation) 
+        public static IgniteTypesSymbols? FromCompilation(Compilation compilation) 
         {
             var componentInterface = compilation.GetTypeByMetadataName(ComponentInterfaceName);
             if (componentInterface is null)

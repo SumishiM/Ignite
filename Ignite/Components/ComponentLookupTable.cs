@@ -18,6 +18,8 @@ namespace Ignite.Components
         /// </summary>
         /// <param name="type"><see cref="Type"/> of the component we want the index of</param>
         /// <returns>Index of the component</returns>
+        // todo : Change GetIndex by GetOrCreateIndex ? 
+        // should not be an issue with the generator tbh
         public int this[Type type] => GetIndex(type);
 
         /// <summary>
@@ -46,8 +48,8 @@ namespace Ignite.Components
                 $"Why are we trying to get a component index for a not component type ?");
 
             Debug.Assert(_componentsIndex.ContainsKey(type),
-                $"Why are we trying to get a component id for a non-registed component?\n" +
-                $"Try using {nameof(Ignite.Components.ComponentLookupTable.GetOrCreateIndex)} instead!");
+                $"Why are we trying to get a component id for a non-registed component ?\n" +
+                $"Try using {nameof(Ignite.Components.ComponentLookupTable.GetOrCreateIndex)} instead !");
 
             return _componentsIndex[type];
         }

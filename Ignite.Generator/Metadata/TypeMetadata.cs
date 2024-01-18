@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Text;
+﻿using System.Collections.Immutable;
 
 namespace Ignite.Generator.Metadata
 {
@@ -18,7 +15,7 @@ namespace Ignite.Generator.Metadata
             bool IsInternal,
             string Name, 
             string FullName,
-            ImmutableArray<Constructor.Metadata> Constructors
+            ImmutableArray<ConstructorMetadata> Constructors
             ) : TypeMetadata;
     }
 }

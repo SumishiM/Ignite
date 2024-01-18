@@ -5,13 +5,10 @@ using System.Text;
 
 namespace Ignite.Generator.Metadata
 {
-    public sealed class Constructor
-    {
-        public sealed record Parameter(
-            string Name, 
-            string FullTypeName);
+    public sealed record ConstructorParameter(
+        string Name,
+        string FullTypeName);
 
-        public sealed record Metadata(
-            ImmutableArray<Parameter> Parameters);
-    }
+    public sealed record ConstructorMetadata(
+        ImmutableArray<ConstructorParameter> Parameters);
 }
