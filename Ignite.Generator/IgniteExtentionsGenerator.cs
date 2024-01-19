@@ -41,10 +41,10 @@ namespace Ignite.Generator
             if (igniteTypesSymbols is null)
                 return;
 
-
             var assemblyTypeFetcher = new AssemblyTypeFetcher(compilation);
             var metadataFetcher = new MetadataFetcher(compilation);
 
+            // Get parent lookup table class
             var parentLookupTableClass = assemblyTypeFetcher
                 .GetAllClassesAndSubtypes()
                 .Where(t => t.IsSubclassOf(igniteTypesSymbols.ComponentLookupTableTypeSymbol))
@@ -59,11 +59,13 @@ namespace Ignite.Generator
                 parentLookupTableClass.FullName()
             );
 
+            // create files as raw strings for now
             var templates = ImmutableArray.Create(
                 FileTemplate.ComponentLookupTableImplementation(projectName),
                 FileTemplate.ProjectComponentsImplementation(projectName)
             );
 
+            // replace project tokens in files
             foreach (var template in templates)
             {
                 template.Process(projectMetadata);
@@ -71,6 +73,7 @@ namespace Ignite.Generator
 
             var allTypeMetadata = metadataFetcher.Fetch(igniteTypesSymbols, potentialComponents);
 
+            // replace tokens in files
             foreach (var template in templates)
             {
                 foreach (var metadata in allTypeMetadata)
@@ -79,11 +82,11 @@ namespace Ignite.Generator
                 }
             }
 
+            // Create sources
             foreach (var template in templates)
             {
                 context.AddSource(template.FileName, template.GetDocumentWithReplacements());
             }
-
         }
 
         private static int NumberOfParentClasses(INamedTypeSymbol type)

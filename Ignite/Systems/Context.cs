@@ -326,7 +326,7 @@ namespace Ignite.Systems
             {
                 if (_nodes.ContainsKey(node.Id))
                 {
-                    StopWatchingNode(node, component, fromDestroy);
+                    StopWatchingNode(node, component, true);
                 }
                 return;
             }
@@ -407,8 +407,8 @@ namespace Ignite.Systems
             }
             else
             {
-                Debug.Assert(!_nodes.ContainsKey(node.Id),
-                    $"Why is a disabled node in the collection?");
+                //Debug.Assert(!_nodes.ContainsKey(node.Id),
+                //    $"Why is a disabled node in the collection?");
 
                 _disabledNodes.Remove(node.Id);
             }

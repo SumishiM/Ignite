@@ -61,6 +61,9 @@ namespace Ignite.UI
                 .AddChild(controller)
                 .AddChild(renderer);
 
+            controller.AddComponent(player.GetComponent<Move>());
+            player.RemoveComponent<Move>();
+
 
             percistentWorld.Start();
             //sceneWorld.Start();

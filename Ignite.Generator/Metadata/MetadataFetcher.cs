@@ -14,6 +14,9 @@ namespace Ignite.Generator.Metadata
             _compilation = compilation;
         }
 
+        /// <summary>
+        /// Fetch every data we want for the generated code. Such as components, and create the metadata related to it.
+        /// </summary>
         public IEnumerable<TypeMetadata> Fetch(
             IgniteTypesSymbols igniteTypesSymbols, 
             ImmutableArray<TypeDeclarationSyntax> potentialComponents)
@@ -29,6 +32,9 @@ namespace Ignite.Generator.Metadata
             }
         }
 
+        /// <summary>
+        /// Fetch components data and create the metadata for it
+        /// </summary>
         private IEnumerable<TypeMetadata.Component> FetchComponents(
             IgniteTypesSymbols igniteTypesSymbols, 
             ImmutableArray<INamedTypeSymbol> allValueTypes)
@@ -51,6 +57,9 @@ namespace Ignite.Generator.Metadata
                     .Select(p => new ConstructorParameter(p.Name, p.Type.FullName()))
                     .ToImmutableArray());    
 
+        /// <summary>
+        /// Get every value types for syntax we are interessed in
+        /// </summary>
         private IEnumerable<INamedTypeSymbol> ValueTypeFromTypeDeclarationSyntax(
             TypeDeclarationSyntax typeDeclarationSyntax)
         {

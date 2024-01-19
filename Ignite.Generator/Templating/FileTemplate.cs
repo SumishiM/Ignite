@@ -21,6 +21,9 @@ namespace Ignite.Generator.Templating
             _substitutions = substitutions;
         }
 
+        /// <summary>
+        /// Component lookup table generated file
+        /// </summary>
         public static FileTemplate ComponentLookupTableImplementation(string projectName)
             => new($"{projectName}ComponentLookupTable.g.cs",
                 Templates.ComponentLookupTableImplementationRaw,
@@ -29,6 +32,9 @@ namespace Ignite.Generator.Templating
                     new ParentProjectLookupTableSubstitution(),
                     new ComponentTypeToIndexSubstitution()));
 
+        /// <summary>
+        /// project components generated file
+        /// </summary>
         public static FileTemplate ProjectComponentsImplementation(string projectName)
             => new($"{projectName}Components.g.cs",
                 Templates.ComponentTypesRaw,

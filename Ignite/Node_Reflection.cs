@@ -17,9 +17,7 @@ namespace Ignite
                 .GetCustomAttribute(typeof(IgnorePauseAttribute), true) != null;
             if ( !IgnorePause )
             {
-                // on pause and resume toggle a flag in id 
-                World.OnPaused += Pause;
-                World.OnResumed += Resume;
+                // on pause and resume toggle a flag in id
             }
         }
 

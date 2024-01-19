@@ -40,6 +40,8 @@ namespace Ignite.UI
             foreach (Node node in context.Nodes)
             {
                 node.GetComponent<Move>().Position += Vector2.One;
+                if (node.GetComponent<Move>().Position.X > 10)
+                    node.Destroy();
                 Console.WriteLine(node.Name + "->" + node.GetComponent<Move>().Position);
             }
         }
