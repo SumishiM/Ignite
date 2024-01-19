@@ -5,9 +5,9 @@ VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ignite", "Ignite\Ignite.csproj", "{A9E3667A-2E62-4B9B-9CFD-B56690FDEB2F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ignite.Generator", "Ignite.Generator\Ignite.Generator.csproj", "{BD4D1486-2E46-435C-A26C-5685A83B526E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Analyzers", "Analyzers", "{DC472E1F-C2E1-4950-8635-B83DDEC24F38}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ignite.ImGui", "Ignite.ImGui\Ignite.ImGui.csproj", "{96EA17CD-41B2-421D-A4C5-886D4F520059}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ignite.Generator", "Analyzers\Ignite.Generator\Ignite.Generator.csproj", "{CA78F110-3D00-432A-A063-2152DF790645}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,17 +19,16 @@ Global
 		{A9E3667A-2E62-4B9B-9CFD-B56690FDEB2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9E3667A-2E62-4B9B-9CFD-B56690FDEB2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9E3667A-2E62-4B9B-9CFD-B56690FDEB2F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD4D1486-2E46-435C-A26C-5685A83B526E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD4D1486-2E46-435C-A26C-5685A83B526E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD4D1486-2E46-435C-A26C-5685A83B526E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD4D1486-2E46-435C-A26C-5685A83B526E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{96EA17CD-41B2-421D-A4C5-886D4F520059}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{96EA17CD-41B2-421D-A4C5-886D4F520059}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{96EA17CD-41B2-421D-A4C5-886D4F520059}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{96EA17CD-41B2-421D-A4C5-886D4F520059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA78F110-3D00-432A-A063-2152DF790645}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA78F110-3D00-432A-A063-2152DF790645}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA78F110-3D00-432A-A063-2152DF790645}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA78F110-3D00-432A-A063-2152DF790645}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CA78F110-3D00-432A-A063-2152DF790645} = {DC472E1F-C2E1-4950-8635-B83DDEC24F38}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6C50BC63-8B0E-4A82-891D-3F54EB375819}

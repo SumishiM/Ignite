@@ -10,7 +10,16 @@
 		<Nullable>enable</Nullable>
 		
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		
+		<BaseOutputPath>..\..\Binary\$(AssemblyName)\</BaseOutputPath>
+		<BaseIntermediateOutputPath>..\..\Bin-Intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="obj\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis" Version="4.8.0" PrivateAssets="all" />
