@@ -95,7 +95,7 @@ namespace Ignite
             _cachedRenderSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IRenderSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IRenderSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
 
-            _cachedExitSystem = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IExitSystem)
+            _cachedExitSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IExitSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IExitSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
 
 
@@ -189,7 +189,7 @@ namespace Ignite
 
             _isExiting = true;
 
-            foreach (var (system, contextId) in _cachedExitSystem.Values)
+            foreach (var (system, contextId) in _cachedExitSystems.Values)
             {
                 system.Exit(_contexts[contextId]);
             }
@@ -206,6 +206,16 @@ namespace Ignite
             OnResumed = null;
             OnDestroyed = null;
 
+            foreach (var system in _idToSystems.Values)
+            {
+                system.Dispose();
+            }
+
+            _cachedStartSystems.Clear();
+            _cachedUpdateSystems.Clear();
+            _cachedRenderSystems.Clear();
+            _cachedExitSystems.Clear();
+
             foreach (var node in Nodes.Values)
             {
                 node.Dispose();
@@ -215,6 +225,8 @@ namespace Ignite
             {
                 context.Dispose();
             }
+
+            _cachedLookupTableImplementation = null;
 
             GC.SuppressFinalize(this);
         }

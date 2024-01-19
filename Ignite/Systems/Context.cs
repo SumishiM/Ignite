@@ -41,6 +41,7 @@ namespace Ignite.Systems
         /// Nodes tracked by the context
         /// </summary>
         private readonly Dictionary<ulong, Node> _nodes = [];
+        private ImmutableArray<Node>? _cachedNodes = null;
 
         public ImmutableArray<Node> Nodes
         {
@@ -55,7 +56,7 @@ namespace Ignite.Systems
         /// Track every deactivated nodes index from <see cref="_nodes"/>
         /// </summary>
         private readonly HashSet<ulong> _disabledNodes = [];
-        private ImmutableArray<Node>? _cachedNodes = null;
+
 
         /// <summary>
         /// Components targeted by this context filter
@@ -110,7 +111,7 @@ namespace Ignite.Systems
                 components.AddRange(collection.Sort());
             }
 
-            // hash
+            // hash [-1000, 1000]
 
             int result = 0;
             int shift = 0;
@@ -127,14 +128,14 @@ namespace Ignite.Systems
         /// <summary>
         /// Create context filters for a given <see cref="Ignite.Systems.ISystem"/>
         /// </summary>
-        /// <returns>A list of <see cref="Ignite.Attributes.FilterAttribute"/> associated 
+        /// <returns>A list of <see cref="Ignite.Attributes.FilterComponentAttribute"/> associated 
         /// with a list of <see cref="Ignite.Components.IComponent"/> indices set by the filter.</returns>
-        private ImmutableArray<(FilterAttribute, ImmutableArray<int>)> CreateFilters(ISystem system)
+        private ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> CreateFilters(ISystem system)
         {
-            var builder = ImmutableArray.CreateBuilder<(FilterAttribute, ImmutableArray<int>)>();
+            var builder = ImmutableArray.CreateBuilder<(FilterComponentAttribute, ImmutableArray<int>)>();
 
-            FilterAttribute[] filters = (FilterAttribute[])system.GetType()
-                .GetCustomAttributes(typeof(FilterAttribute), true);
+            FilterComponentAttribute[] filters = (FilterComponentAttribute[])system.GetType()
+                .GetCustomAttributes(typeof(FilterComponentAttribute), true);
 
             foreach (var filter in filters)
             {
@@ -149,7 +150,7 @@ namespace Ignite.Systems
         /// <see cref="Ignite.Systems.ISystem"/> <see cref="AccessFilter"/>
         /// </summary>
         /// <param name="filters">
-        /// A list of <see cref="Ignite.Attributes.FilterAttribute"/> associated 
+        /// A list of <see cref="Ignite.Attributes.FilterComponentAttribute"/> associated 
         /// with a list of <see cref="Ignite.Components.IComponent"/> indices set by the filter.
         /// </param>
         /// <returns>
@@ -157,7 +158,7 @@ namespace Ignite.Systems
         /// sorted by <see cref="AccessFilter"/>
         /// </returns>
         private ImmutableDictionary<AccessFilter, ImmutableArray<int>> CreateTargetComponents(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+            ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> filters)
         {
             var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<int>>();
 
@@ -193,7 +194,7 @@ namespace Ignite.Systems
         /// <see cref="Ignite.Systems.ISystem"/> <see cref="AccessKind"/>
         /// </summary>
         /// <param name="filters">
-        /// A list of <see cref="Ignite.Attributes.FilterAttribute"/> associated 
+        /// A list of <see cref="Ignite.Attributes.FilterComponentAttribute"/> associated 
         /// with a list of <see cref="Ignite.Components.IComponent"/> index set by the filter.
         /// </param>
         /// <returns>
@@ -201,7 +202,7 @@ namespace Ignite.Systems
         /// sorted by <see cref="AccessKind"/>
         /// </returns>
         private ImmutableDictionary<AccessKind, ImmutableHashSet<int>> CreateOperationsKind(
-            ImmutableArray<(FilterAttribute, ImmutableArray<int>)> filters)
+            ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> filters)
         {
             var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<int>>();
 

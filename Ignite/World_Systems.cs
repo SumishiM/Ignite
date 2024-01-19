@@ -15,7 +15,7 @@ namespace Ignite
         /// <summary>
         /// Systems executed on world exit
         /// </summary>
-        private readonly SortedList<int, (IExitSystem system, int context)> _cachedExitSystem;
+        private readonly SortedList<int, (IExitSystem system, int context)> _cachedExitSystems;
 
         /// <summary>
         /// Systems executed on world update

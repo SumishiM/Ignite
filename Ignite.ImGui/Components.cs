@@ -14,7 +14,7 @@ namespace Ignite.UI
     {
     }
 
-    [Filter(typeof(Move))]
+    [FilterComponent(typeof(Move))]
     public class SetStartMoveSystem : IStartSystem
     {
         public void Start(Context context)
@@ -22,16 +22,17 @@ namespace Ignite.UI
             foreach (Node node in context.Nodes)
             {
                 node.GetComponent<Move>().Position = Vector2.One;
-                Console.WriteLine(node.Name + "->" + node.GetComponent<Move>().Position);
+                Console.WriteLine(node.Name + " -> " + node.GetComponent<Move>().Position);
             }
         }
+
         public void Dispose()
         {
             Console.WriteLine(nameof(SetStartMoveSystem.Dispose));
         }
     }
 
-    [Filter(typeof(Move)), IgnorePause]
+    [FilterComponent(typeof(Move))]
     public class UpdateMoveSystem : IUpdateSystem
     {
         public void Update(Context context)
@@ -49,7 +50,7 @@ namespace Ignite.UI
         }
     }
 
-    [Filter(typeof(Move))]
+    [FilterComponent(typeof(Move))]
     public class SetExitMoveSystem : IExitSystem
     {
         public void Exit(Context context)

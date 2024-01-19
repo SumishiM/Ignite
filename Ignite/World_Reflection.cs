@@ -34,11 +34,11 @@ namespace Ignite
         /// <summary>
         /// Cache the lookup implementation for this game.
         /// </summary>
-        private static Type? _cachedLookupImplementation = null;
+        private static Type? _cachedLookupTableImplementation = null;
 
         private ComponentLookupTable FindLookupTableImplementation()
         {
-            if (_cachedLookupImplementation is null)
+            if (_cachedLookupTableImplementation is null)
             {
                 Type lookup = typeof(ComponentLookupTable);
 
@@ -59,12 +59,12 @@ namespace Ignite
                     }
                 }
 
-                _cachedLookupImplementation = candidateLookupImplementations.MaxBy(NumberOfParentClasses);
+                _cachedLookupTableImplementation = candidateLookupImplementations.MaxBy(NumberOfParentClasses);
             }
 
-            if (_cachedLookupImplementation is not null)
+            if (_cachedLookupTableImplementation is not null)
             {
-                return (ComponentLookupTable)Activator.CreateInstance(_cachedLookupImplementation)!;
+                return (ComponentLookupTable)Activator.CreateInstance(_cachedLookupTableImplementation)!;
             }
 
             throw new InvalidOperationException("A generator is required to be run before running the game!");
