@@ -8,6 +8,9 @@ namespace Ignite
      **/
     public partial class Node
     {
+        /// <summary>
+        /// Might be deleted in the future
+        /// </summary>
         private void CheckIgnorePause()
         {
             IgnorePause = GetType().DeclaringType?

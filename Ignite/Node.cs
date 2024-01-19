@@ -17,14 +17,11 @@
         /// </summary>
         public ulong Id;
 
-        private bool _isActive = true;
-        public bool IsActive => _isActive;
+        private bool _isEnabled = true;
+        public bool IsEnabled => _isEnabled;
 
         private bool _pendingDestroy = false;
         public bool IsDestroyed => _pendingDestroy;
-
-        private bool _isPaused = false;
-        public bool IsPaused => _isPaused;
 
         /// <summary>
         /// Whether the node will keep working during world pause or not
@@ -103,45 +100,18 @@
 
         public virtual void Enable()
         {
-            if (_isActive) return;
+            if (_isEnabled) return;
 
-            _isActive = true;
+            _isEnabled = true;
             OnEnabled?.Invoke(this);
-
-            if ( _isPaused )
-                Resume();
         }
 
         public virtual void Disable()
         {
-            if (!_isActive) return;
+            if (!_isEnabled) return;
 
-            _isActive = false;
+            _isEnabled = false;
             OnDisabled?.Invoke(this);
-        }
-
-        /// <summary>
-        /// If the Node is paused then it disables it 
-        /// </summary>
-        private void Pause()
-        {
-            if ( _isPaused ) return;
-            _isPaused = true;
-            OnPaused?.Invoke(this);
-            Disable();
-        }
-
-        /// <summary>
-        /// If the node is disabled then we dont resume it
-        /// ? Might cause some issues later ?
-        /// </summary>
-        private void Resume ()
-        {
-            if( !_isPaused || !_isActive ) return;
-
-            _isPaused = false;
-            OnResumed?.Invoke(this);
-            Enable();
         }
 
         public virtual void Destroy()

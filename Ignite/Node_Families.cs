@@ -12,11 +12,25 @@ namespace Ignite
         public event Action<Node, Node, bool>? OnChildRemoved;
 
         protected Node? _parent;
+
+        /// <summary>
+        /// Parent node in the hierarchy
+        /// </summary>
         public Node? Parent => _parent;
 
-
+        /// <summary>
+        /// Every nodes set as children of this node
+        /// </summary>
         private readonly Dictionary<ulong, Node> _children = new();
+
+        /// <summary>
+        /// Childen Node id to childen Node object
+        /// </summary>
         internal Dictionary<ulong, Node> ChildrenIndex => _children;
+
+        /// <summary>
+        /// Every direct children of the node
+        /// </summary>
         public ImmutableArray<Node> Children => _children.Values.ToImmutableArray();
 
         /// <summary>

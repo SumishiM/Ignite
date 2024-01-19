@@ -32,25 +32,41 @@ namespace Ignite
         /// </summary>
         private readonly Dictionary<int, SystemInfo> _systems;
 
+        /// <summary>
+        /// Systems from id
+        /// </summary>
         private readonly ImmutableDictionary<int, ISystem> _idToSystems;
 
+        /// <summary>
+        /// Types to system id
+        /// </summary>
         private readonly ImmutableDictionary<Type, int> _typeToSystem;
 
-
+        /// <summary>
+        /// Ids of the systems that can pause
+        /// </summary>
         private readonly ImmutableHashSet<int> _pauseSystems;
 
+        /// <summary>
+        /// Ids of the systems that cannot pause
+        /// </summary>
         private readonly ImmutableHashSet<int> _ignorePauseSystems;
-
 
         /// <summary>
         /// Ids of <see cref="IStartSystem"/> initialized.
         /// </summary>
         private readonly HashSet<int> _systemsInitialized;
 
+        /// <summary>
+        /// Systems ids of systems waiting to be toggled and there current pause state
+        /// </summary>
         private readonly Dictionary<int, bool> _pendingToggleSystems;
 
-
+        /// <summary>
+        /// Contexts created for teh systems in the world
+        /// </summary>
         private readonly Dictionary<int, Context> _contexts;
+
 
 
         /// <summary>
@@ -213,6 +229,9 @@ namespace Ignite
             if (system is IRenderSystem) _cachedRenderSystems.Remove(id);
         }
 
+        /// <summary>
+        /// Get the id of a context already in the world or create a new context
+        /// </summary>
         private int GetOrCreateContext(Context.AccessFilter filter, params int[] components)
         {
             Context context = new Context(this, filter, components);

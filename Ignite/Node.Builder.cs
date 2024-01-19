@@ -14,7 +14,7 @@ namespace Ignite
             public World World => _world;
             public string Name { get; set; } = "Unnamed Node";
 
-            public Node? Parent { get; set; }
+            public Node? Parent { get; }
             private readonly List<Node> _children = [];
             private readonly List<Type> _componentsTypes = [];
             private readonly List<IComponent> _components = [];
@@ -53,6 +53,9 @@ namespace Ignite
                 return this;
             }
 
+            /// <summary>
+            /// Register a component to the builder
+            /// </summary>
             public Builder AddComponents(params IComponent[] components)
             {
                 foreach (var component in components)
@@ -63,6 +66,9 @@ namespace Ignite
                 return this;
             }
 
+            /// <summary>
+            /// Register an empty component to the builder
+            /// </summary>
             public Builder AddComponents(params Type[] components)
             {
                 foreach (var component in components)

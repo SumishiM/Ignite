@@ -43,6 +43,9 @@ namespace Ignite.Systems
         private readonly Dictionary<ulong, Node> _nodes = [];
         private ImmutableArray<Node>? _cachedNodes = null;
 
+        /// <summary>
+        /// Every nodes filtered by the context
+        /// </summary>
         public ImmutableArray<Node> Nodes
         {
             get
@@ -71,6 +74,9 @@ namespace Ignite.Systems
         internal ImmutableHashSet<int> ReadComponents => _componentsAccess[AccessKind.Read];
         internal ImmutableHashSet<int> WriteComponents => _componentsAccess[AccessKind.Write];
 
+        /// <summary>
+        /// Whether the world have a filter or not
+        /// </summary>
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
         private ComponentLookupTable _lookup;
@@ -283,7 +289,7 @@ namespace Ignite.Systems
 
                 if (OnNodeComponentAddedInContext is not null)
                 {
-                    if (node.IsActive)
+                    if (node.IsEnabled)
                     {
                         foreach (var index in node.ComponentsIndices)
                         {
@@ -294,7 +300,7 @@ namespace Ignite.Systems
                     node.OnComponentAdded += OnNodeComponentAddedInContext;
                 }
 
-                if (node.IsActive)
+                if (node.IsEnabled)
                 {
                     _nodes[node.Id] = node;
                     _cachedNodes = null;
@@ -373,7 +379,7 @@ namespace Ignite.Systems
             node.OnEnabled += OnNodeEnabledInContext;
             node.OnDisabled += OnNodeDisabledInContext;
 
-            if (node.IsActive)
+            if (node.IsEnabled)
             {
                 OnNodeComponentAddedInContext?.Invoke(node, component);
 
@@ -395,7 +401,7 @@ namespace Ignite.Systems
             node.OnEnabled -= OnNodeEnabledInContext;
             node.OnDisabled -= OnNodeDisabledInContext;
 
-            if (node.IsActive)
+            if (node.IsEnabled)
             {
                 OnNodeComponentRemovedInContext?.Invoke(node, component, fromDestroy);
             }

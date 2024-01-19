@@ -1,13 +1,7 @@
 ﻿using Ignite.Attributes;
 using Ignite.Components;
 using Ignite.Systems;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ignite
 {
@@ -36,6 +30,9 @@ namespace Ignite
         /// </summary>
         private static Type? _cachedLookupTableImplementation = null;
 
+        /// <summary>
+        /// Find the best lookup table implementation in projects using Ignite
+        /// </summary>
         private ComponentLookupTable FindLookupTableImplementation()
         {
             if (_cachedLookupTableImplementation is null)

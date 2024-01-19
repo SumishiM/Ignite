@@ -32,8 +32,14 @@ namespace Ignite
         public Dictionary<int, IComponent> Components { get; protected set; } =
             new Dictionary<int, IComponent>();
 
-        public HashSet<int> ComponentsIndices => Components.Keys.ToHashSet();
+        /// <summary>
+        /// Ids of every components on the node
+        /// </summary>
+        internal HashSet<int> ComponentsIndices => Components.Keys.ToHashSet();
 
+        /// <summary>
+        /// World component lookup table
+        /// </summary>
         private readonly ComponentLookupTable _lookup;
 
         public Node ( World world, params IComponent[] components )
@@ -245,6 +251,9 @@ namespace Ignite
             return this;
         }
 
+        /// <summary>
+        /// Remove every components of the node, mainly for destroy
+        /// </summary>
         private void RemoveAllComponents()
         {
             foreach ( var component in Components )
