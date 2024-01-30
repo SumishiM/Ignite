@@ -5,7 +5,7 @@ namespace Ignite
 {
     public partial class Node
     {
-        public static Builder CreateBuilder(World world, string name = "Unnamed Node")
+        public static Builder CreateBuilder ( World world, string name = "Unnamed Node" )
             => new(world, name);
 
         public sealed class Builder
@@ -19,7 +19,7 @@ namespace Ignite
             private readonly List<Type> _componentsTypes = [];
             private readonly List<IComponent> _components = [];
 
-            public Builder(World world, string name = "Unnamed Node", Node? parent = null)
+            public Builder ( World world, string name = "Unnamed Node", Node? parent = null )
             {
                 _world = world;
                 Name = name;
@@ -29,25 +29,28 @@ namespace Ignite
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>
-            public Builder AddComponent<T>(T? component = default) where T : IComponent
+            public Builder AddComponent<T> ( T? component = null ) where T : class, IComponent
                 => AddComponent(typeof(T), component);
 
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/> or add a given existing component.
             /// </summary>
-            public Builder AddComponent(Type type, IComponent? component = null)
+            public Builder AddComponent ( Type type, IComponent? component = null )
             {
                 Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
-                    $"Whay are we trying to add a component that isn't a IComponent ?");
+                    $"Why are we trying to add a component that isn't a IComponent ?");
 
-                if (component == null)
+                if ( component == null )
                 {
-                    if (_componentsTypes.Contains(type) && !_components.Any(c => c.GetType() == type))
-                        _componentsTypes.Add(type);
+                    if ( !_components.Any(c => c.GetType() == type) )
+                    {
+                        if ( Activator.CreateInstance(type) is IComponent c )
+                            _components.Add(c);
+                    }
                 }
                 else
                 {
-                    if (!_components.Any(c => c.GetType() == component.GetType()))
+                    if ( !_components.Any(c => c.GetType() == component.GetType()) )
                         _components.Add(component);
                 }
                 return this;
@@ -56,9 +59,9 @@ namespace Ignite
             /// <summary>
             /// Register a component to the builder
             /// </summary>
-            public Builder AddComponents(params IComponent[] components)
+            public Builder AddComponents ( params IComponent[] components )
             {
-                foreach (var component in components)
+                foreach ( var component in components )
                 {
                     AddComponent(component);
                 }
@@ -69,9 +72,9 @@ namespace Ignite
             /// <summary>
             /// Register an empty component to the builder
             /// </summary>
-            public Builder AddComponents(params Type[] components)
+            public Builder AddComponents ( params Type[] components )
             {
-                foreach (var component in components)
+                foreach ( var component in components )
                 {
                     AddComponent(component, null);
                 }
@@ -79,25 +82,25 @@ namespace Ignite
                 return this;
             }
 
-            public Node ToNode() => (Node)this;
+            public Node ToNode () => (Node)this;
 
-            public static implicit operator Node(Builder b)
+            public static implicit operator Node ( Builder b )
             {
 
                 Node node = new(b._world);
                 node.Name = b.Name;
 
-                if (node.Id != 1)
+                if ( node.Id != 1 )
                     b.Parent!.AddChild(node);
 
                 node.AddChildren(b._children);
 
-                foreach (IComponent component in b._components)
+                foreach ( IComponent component in b._components )
                 {
                     node.AddComponent(component);
                 }
 
-                foreach (Type type in b._componentsTypes)
+                foreach ( Type type in b._componentsTypes )
                 {
                     node.AddComponent(type);
                 }

@@ -30,7 +30,8 @@ namespace Ignite.Generator.Templating
                 ImmutableArray.Create<TemplateSubstitution>(
                     new ProjectNameSubstitution(),
                     new ParentProjectLookupTableSubstitution(),
-                    new ComponentTypeToIndexSubstitution()));
+                    new ComponentTypeToIndexSubstitution(),
+                    new IdCountSubstitution()));
 
         /// <summary>
         /// project components generated file

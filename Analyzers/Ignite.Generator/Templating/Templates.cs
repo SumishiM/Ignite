@@ -7,6 +7,7 @@
         public const string ComponentIndexListToken = "<component_index_list>";
         public const string ComponentTypeToIndexToken = "<component_type_to_index>";
         public const string ParentComponentLookupTable = "<parent_project_lookup>";
+        public const string NextLookupIdToken = "<next_lookup_id>";
 
         public const string ComponentLookupTableImplementationRaw =
             $$"""
@@ -17,6 +18,10 @@
 
             public class {{ProjectNameToken}}ComponentLookupTable : {{ParentComponentLookupTable}}
             {
+                /// <summary>
+                /// First lookup id a <see cref="Ignite.Components.ComponentLookupTable"/> implementation that inherits from this class must use.
+                /// </summary>
+                {{NextLookupIdToken}}
                 public {{ProjectNameToken}}ComponentLookupTable()
                 {
                     _componentsIndex = base._componentsIndex

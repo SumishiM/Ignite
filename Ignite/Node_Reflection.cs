@@ -26,17 +26,6 @@ namespace Ignite
         /// </summary>
         private void CheckRequiredComponents()
         {
-            RequireComponentAttribute[] requires = (RequireComponentAttribute[])GetType()
-                .GetCustomAttributes(typeof(RequireComponentAttribute), true);
-
-            foreach (var require in requires)
-            {
-                foreach (Type componentType in require.Types)
-                {
-                    if (!HasComponent(componentType))
-                        AddComponent(componentType);
-                }
-            }
         }
     }
 }
