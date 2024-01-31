@@ -180,9 +180,8 @@ namespace Ignite
         /// </summary>
         public Node AddComponent<T>(T component) where T : class, IComponent
         {
-            Debug.Assert(!HasComponent(component),
-                $"Why are we adding a component to a node already having one of the same type ? " +
-                $"Try AddOrReplaceComponent instead.");
+            if (HasComponent<T>())
+                return this;
 
             Components[_lookup[component.GetType()]] = component;
             component.Parent = this;
