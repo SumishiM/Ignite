@@ -4,6 +4,7 @@ using Ignite.Systems;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Security.Principal;
+using static Ignite.Node;
 
 namespace Ignite
 {
@@ -29,6 +30,35 @@ namespace Ignite
 
         private bool _isPaused = false;
         public bool IsPaused => _isPaused;
+
+        internal UIDGenerator _UIDGenerator;
+
+        internal class UIDGenerator
+        {
+            public ulong LastGeneratedId { get; private set; } = 0;
+
+            private ulong CurrentId = 0;
+            private ushort CurrentGenerationId = 0;
+
+            public ulong Next(Node.Flags flags = Flags.Empty)
+            {
+                ulong id = (ulong)flags;
+
+                if (++CurrentId < UInt32.MaxValue)
+                    id += CurrentId;
+                else
+                {
+                    CurrentId = 0;
+                    if (++CurrentGenerationId < UInt16.MaxValue)
+                        id += CurrentGenerationId;
+                    else
+                        CurrentGenerationId = 0;
+                }
+
+                LastGeneratedId = id;
+                return id;
+            }
+        }
 
 
         public World(IList<ISystem> systems)

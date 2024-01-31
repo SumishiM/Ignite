@@ -39,60 +39,13 @@
             PendingDestroy = 0b1ul << 62,
         }
 
-        public class UID
-        {
-            public ulong Id { get; internal set; }
-
-            public void SetFlags(Node.Flags flags)
-            {
-                //Id = (Id & RestOfBitsMask) | ((ulong)flags << 48);
-            }
-
-            public void RemoveFlags(Node.Flags flags)
-            {
-                //Id ^= (ulong)flags;
-            }
-
-            public bool HasFlag(Node.Flags flags)
-            {
-                return (Id & (ulong)flags) == (ulong)flags; // Check if the flag is set using bitwise AND
-            }
-
-            public static ulong LastGeneratedId { get; private set; } = 0;
-
-            private static ulong CurrentId = 0;
-            private static ushort CurrentGenerationId = 0;
-
-            public static ulong Next(Node.Flags flags = Flags.Empty)
-            {
-                ulong id = (ulong)flags;
-
-                if (++CurrentId < UInt32.MaxValue)
-                    id += CurrentId;
-                else
-                {
-                    CurrentId = 0;
-                    if (++CurrentGenerationId < UInt16.MaxValue)
-                        id += CurrentGenerationId;
-                    else
-                        CurrentGenerationId = 0;
-                }
-
-                LastGeneratedId = id;
-                return id;
-            }
-
-            public static implicit operator UID(ulong id) => new() { Id = id };
-            public static implicit operator ulong(UID id) => id.Id;
-        }
-
         public Node(World world, string name = "Unnamed Node")
         {
             World = world;
             _lookup = world.Lookup;
             Name = name;
 
-            Id = UID.Next();
+            Id = world._UIDGenerator.Next();
         }
 
         public virtual void Enable()
