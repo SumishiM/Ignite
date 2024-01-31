@@ -64,6 +64,9 @@ namespace Ignite
         public World(IList<ISystem> systems)
         {
             Nodes = [];
+
+            _UIDGenerator = new UIDGenerator();
+
             Lookup = FindLookupTableImplementation();
             Lookup.CheckRequirements();
 
