@@ -184,6 +184,7 @@ namespace Ignite
 
             Components[_lookup[component.GetType()]] = component;
             OnComponentAdded?.Invoke(this, _lookup[component]);
+            AddRequiredComponents(component);
             return this;
         }
 

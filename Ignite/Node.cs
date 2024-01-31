@@ -93,9 +93,6 @@
             Name = name;
 
             Id = UID.Next();
-            
-            CheckIgnorePause();
-            CheckRequiredComponents();
         }
 
         public virtual void Enable()

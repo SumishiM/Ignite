@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// Attribute that tell the Ignite what <see cref="Ignite.Components.IComponent"/>
-    /// a <see cref="Ignite.Node"/> require.
+    /// another <see cref="Ignite.Components.IComponent"/> require.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class RequireComponentAttribute : Attribute

@@ -1,5 +1,4 @@
-﻿using Ignite.Attributes;
-using System.Reflection;
+﻿using Ignite.Components;
 
 namespace Ignite
 {
@@ -8,33 +7,14 @@ namespace Ignite
      **/
     public partial class Node
     {
-        /// <summary>
-        /// Might be deleted in the future
-        /// </summary>
-        private void CheckIgnorePause()
+        private void AddRequiredComponents(IComponent component)
         {
-            IgnorePause = GetType().DeclaringType?
-                .GetCustomAttribute(typeof(IgnorePauseAttribute), true) != null;
-            if ( !IgnorePause )
+            Type type = component.GetType();
+            if (_lookup.RequiredComponentsLookup.TryGetValue(_lookup[type], out var requirements))
             {
-                // on pause and resume toggle a flag in id
-            }
-        }
-
-        /// <summary>
-        /// Check node required components and add them as empty if needed
-        /// </summary>
-        private void CheckRequiredComponents()
-        {
-            RequireComponentAttribute[] requires = (RequireComponentAttribute[])GetType()
-                .GetCustomAttributes(typeof(RequireComponentAttribute), true);
-
-            foreach (var require in requires)
-            {
-                foreach (Type componentType in require.Types)
+                foreach (var requirement in requirements)
                 {
-                    if (!HasComponent(componentType))
-                        AddComponent(componentType);
+                    AddComponent(requirement);
                 }
             }
         }

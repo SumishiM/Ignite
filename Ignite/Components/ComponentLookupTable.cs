@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using Ignite.Attributes;
+using System.Collections.Immutable;
 using System.Diagnostics;
 
 namespace Ignite.Components
@@ -8,7 +9,38 @@ namespace Ignite.Components
         protected ImmutableDictionary<Type, int> _componentsIndex =
             new Dictionary<Type, int>() { }.ToImmutableDictionary();
 
+        internal ImmutableDictionary<int, ImmutableHashSet<Type>> RequiredComponentsLookup =
+            new Dictionary<int, ImmutableHashSet<Type>>() { }.ToImmutableDictionary();
+
         public static int NextLookupId = 25;
+
+        /// <summary>
+        /// Create a lookup for every required components for each components
+        /// </summary>
+        private void CheckRequirements()
+        {
+            var builder = ImmutableDictionary.CreateBuilder<int, ImmutableHashSet<Type>>();
+
+            foreach (var component in _componentsIndex.Values)
+            {
+                RequireComponentAttribute[] requires = (RequireComponentAttribute[])GetType()
+                    .GetCustomAttributes(typeof(RequireComponentAttribute), true);
+
+                foreach (var require in requires)
+                {
+                    var indices = ImmutableHashSet.CreateBuilder<Type>();
+
+                    foreach (Type componentType in require.Types)
+                    {
+                        indices.Add(componentType);
+                    }
+
+                    builder.Add(component, indices.ToImmutableHashSet());
+                }
+            }
+
+            RequiredComponentsLookup = builder.ToImmutableDictionary();
+        }
 
         /// <summary>
         /// Get the index of the component of <see cref="Type"/> <paramref name="type"/>.
