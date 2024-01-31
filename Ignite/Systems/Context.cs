@@ -43,6 +43,18 @@ namespace Ignite.Systems
         private readonly Dictionary<ulong, Node> _nodes = [];
         private ImmutableArray<Node>? _cachedNodes = null;
 
+
+        //private ImmutableDictionary<Type, ImmutableArray<IComponent>>? _cachedComponents = null;
+        //private Dictionary<Type, List<IComponent>> _components;
+        //public ImmutableDictionary<Type, ImmutableArray<IComponent>> Components
+        //{
+        //    get
+        //    {
+        //        _cachedComponents ??= _components.ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
+        //        return _cachedComponents;
+        //    }
+        //}
+
         /// <summary>
         /// Every nodes filtered by the context
         /// </summary>
@@ -416,6 +428,7 @@ namespace Ignite.Systems
             _nodes.Remove(node.Id);
             _cachedNodes = null;
         }
+
 
 
         public void Dispose()

@@ -39,7 +39,10 @@ namespace Ignite.Generator.Metadata
             IgniteTypesSymbols igniteTypesSymbols, 
             ImmutableArray<INamedTypeSymbol> allValueTypes)
             => allValueTypes
-                .Where(t => !t.IsGenericType && t.ImplementInterface(igniteTypesSymbols.ComponentTypeSymbol))
+                .Where(t => 
+                    (!t.IsGenericType || !t.IsAbstract) 
+                    && t.ImplementInterface(igniteTypesSymbols.ComponentTypeSymbol)
+                    && !string.IsNullOrEmpty(t.Name.ToCleanComponentName()))
                 .OrderBy(c => c.Name)
                 .Select((component, index) => new TypeMetadata.Component(
                     Index: index,
