@@ -23,19 +23,22 @@ namespace Ignite.Components
 
             foreach (var component in _componentsIndex.Values)
             {
-                RequireComponentAttribute[] requires = (RequireComponentAttribute[])GetType()
-                    .GetCustomAttributes(typeof(RequireComponentAttribute), true);
-
-                foreach (var require in requires)
+                if (_componentsIndex.FirstOrDefault(kvp => kvp.Value == component).Key is Type type)
                 {
-                    var indices = ImmutableHashSet.CreateBuilder<Type>();
+                    RequireComponentAttribute[] requires = (RequireComponentAttribute[])type
+                        .GetCustomAttributes(typeof(RequireComponentAttribute), true);
 
-                    foreach (Type componentType in require.Types)
+                    foreach (var require in requires)
                     {
-                        indices.Add(componentType);
-                    }
+                        var indices = ImmutableHashSet.CreateBuilder<Type>();
 
-                    builder.Add(component, indices.ToImmutableHashSet());
+                        foreach (Type componentType in require.Types)
+                        {
+                            indices.Add(componentType);
+                        }
+
+                        builder.Add(component, indices.ToImmutableHashSet());
+                    }
                 }
             }
 
