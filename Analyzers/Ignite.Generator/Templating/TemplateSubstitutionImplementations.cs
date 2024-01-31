@@ -14,9 +14,9 @@ namespace Ignite.Generator.Templating
 
         internal sealed class ComponentTypeToIndexSubstitution : TemplateSubstitution
         {
-            public ComponentTypeToIndexSubstitution() : base(Templates.ComponentTypeToIndexToken) { }
+            public ComponentTypeToIndexSubstitution () : base(Templates.ComponentTypeToIndexToken) { }
 
-            protected override string? ProcessComponent(TypeMetadata.Component component)
+            protected override string? ProcessComponent ( TypeMetadata.Component component )
                 => $$"""
                             { typeof(global::{{component.FullName}}), global::{{Templates.GeneratedCodeNamespace}}.{{_projectName}}Components.{{component.Name}} },
                 
@@ -43,6 +43,24 @@ namespace Ignite.Generator.Templating
 
             protected override string? ProcessProject(TypeMetadata.Project project)
             => $"global::{project.ParentProjectComponentLookupTable}";
+        }
+
+        internal sealed class IdCountSubstitution : TemplateSubstitution
+        {
+            private int _idCount;
+            public IdCountSubstitution () : base(Templates.NextLookupIdToken) { }
+
+            protected override string? ProcessComponent ( TypeMetadata.Component metadata )
+            {
+                _idCount++;
+                return base.ProcessComponent(metadata);
+            }
+
+            protected override string FinalModification ()
+                => $"""
+                public static int {_projectName}NextLookupId => global::Ignite.{(string.IsNullOrEmpty(_parentProjectName) ? "Components" : "Generated")}.{_parentProjectName}ComponentLookupTable.{_parentProjectName}NextLookupId + {_idCount};
+
+                """;
         }
     }
 }

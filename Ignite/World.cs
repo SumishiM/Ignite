@@ -206,10 +206,7 @@ namespace Ignite
             OnResumed = null;
             OnDestroyed = null;
 
-            foreach (var system in _idToSystems.Values)
-            {
-                system.Dispose();
-            }
+            _idToSystems.Clear();
 
             _cachedStartSystems.Clear();
             _cachedUpdateSystems.Clear();
