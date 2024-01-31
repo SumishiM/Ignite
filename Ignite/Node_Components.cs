@@ -185,6 +185,7 @@ namespace Ignite
                 $"Try AddOrReplaceComponent instead.");
 
             Components[_lookup[component.GetType()]] = component;
+            component.Parent = this;
             OnComponentAdded?.Invoke(this, _lookup[component]);
             AddRequiredComponents(component);
             return this;
@@ -237,10 +238,7 @@ namespace Ignite
         /// </summary>
         public Node RemoveComponent<T>()
         {
-            int index = _lookup[typeof(T)];
-            Components.Remove(index);
-            OnComponentRemoved?.Invoke(this, index, false);
-            return this;
+            return RemoveComponent(typeof(T));
         }
 
         /// <summary>
@@ -249,8 +247,8 @@ namespace Ignite
         public Node RemoveComponent(Type type)
         {
             int index = _lookup[type];
-            Components.Remove(index);
-            OnComponentRemoved?.Invoke(this, index, false);
+            if (Components.Remove(index))
+                OnComponentRemoved?.Invoke(this, index, false);
             return this;
         }
 
