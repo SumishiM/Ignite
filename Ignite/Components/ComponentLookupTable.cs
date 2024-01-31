@@ -17,7 +17,7 @@ namespace Ignite.Components
         /// <summary>
         /// Create a lookup for every required components for each components
         /// </summary>
-        private void CheckRequirements()
+        internal void CheckRequirements()
         {
             var builder = ImmutableDictionary.CreateBuilder<int, ImmutableHashSet<Type>>();
 

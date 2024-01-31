@@ -35,6 +35,7 @@ namespace Ignite
         {
             Nodes = [];
             Lookup = FindLookupTableImplementation();
+            Lookup.CheckRequirements();
 
             _systemsInitialized = [];
             _pendingToggleSystems = [];
