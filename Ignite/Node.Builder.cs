@@ -10,8 +10,7 @@ namespace Ignite
 
         public sealed class Builder
         {
-            private readonly World _world;
-            public World World => _world;
+            private readonly World _world ;
             public string Name { get; set; } = "Unnamed Node";
 
             public Node? Parent { get; }

@@ -22,7 +22,7 @@ namespace Ignite
         /// <returns></returns>
         private bool CanSystemPause(ISystem system)
         {
-            return system is IUpdateSystem && !DoSystemIgnorePause(system);
+            return (system is IUpdateSystem || system is IFixedUpdateSystem) && !DoSystemIgnorePause(system);
         }
 
         /// <summary>

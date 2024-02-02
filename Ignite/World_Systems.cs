@@ -23,6 +23,11 @@ namespace Ignite
         private readonly SortedList<int, (IUpdateSystem system, int context)> _cachedUpdateSystems;
 
         /// <summary>
+        /// Systems executed on world update
+        /// </summary>
+        private readonly SortedList<int, (IFixedUpdateSystem system, int context)> _cachedFixedUpdateSystems;
+
+        /// <summary>
         /// Systems executed on world render
         /// </summary>
         private readonly SortedList<int, (IRenderSystem system, int context)> _cachedRenderSystems;
@@ -215,6 +220,7 @@ namespace Ignite
             }
 
             if (system is IUpdateSystem updateSystem) _cachedUpdateSystems.Add(id, (updateSystem, contextId));
+            if (system is IFixedUpdateSystem fixedUpdatepdateSystem) _cachedFixedUpdateSystems.Add(id, (fixedUpdatepdateSystem, contextId));
             if (system is IRenderSystem renderSystem) _cachedRenderSystems.Add(id, (renderSystem, contextId));
         }
 
@@ -226,6 +232,7 @@ namespace Ignite
             ISystem system = _idToSystems[(int)id];
             if (system is IStartSystem) _cachedStartSystems.Remove(id);
             if (system is IUpdateSystem) _cachedUpdateSystems.Remove(id);
+            if (system is IFixedUpdateSystem) _cachedFixedUpdateSystems.Remove(id);
             if (system is IRenderSystem) _cachedRenderSystems.Remove(id);
         }
 
@@ -234,7 +241,7 @@ namespace Ignite
         /// </summary>
         private int GetOrCreateContext(Context.AccessFilter filter, params int[] components)
         {
-            Context context = new Context(this, filter, components);
+            Context context = new(this, filter, components);
             if( _contexts.ContainsKey(context.Id))
             {
                 return context.Id;

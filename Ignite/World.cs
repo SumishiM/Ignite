@@ -79,14 +79,15 @@ namespace Ignite
 
             var idToSystems = ImmutableDictionary.CreateBuilder<int, ISystem>();
 
-            _contexts = new Dictionary<int, Context>();
-            _systems = new Dictionary<int, SystemInfo>();
+            _contexts = [];
+            _systems = [];
 
             for (int i = 0; i < systems.Count; i++)
             {
                 ISystem system = systems[i];
                 Context context = new(this, system);
 
+                // check context
                 if (_contexts.TryGetValue(context.Id, out Context? value))
                 {
                     context = value;
@@ -96,6 +97,7 @@ namespace Ignite
                     _contexts.Add(context.Id, context);
                 }
 
+                // pause
                 if (DoSystemIgnorePause(system))
                 {
                     ignorePauseSystems.Add(i);
@@ -110,7 +112,7 @@ namespace Ignite
                 {
                     ContextId = context.Id,
                     Index = i,
-                    Order = i // maybe we can make an algo to check systems dependency on other systems
+                    Order = i // maybe make an algo to check systems dependency on other systems
                 });
             }
 
@@ -120,11 +122,15 @@ namespace Ignite
             _idToSystems = idToSystems.ToImmutable();
             _typeToSystem = idToSystems.ToImmutableDictionary(system => system.Value.GetType(), system => system.Key);
 
+            // cache systems from type
             _cachedStartSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IStartSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IStartSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
 
             _cachedUpdateSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IUpdateSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IUpdateSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
+
+            _cachedFixedUpdateSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IFixedUpdateSystem)
+                .ToDictionary(kvp => kvp.Value.Order, kvp => ((IFixedUpdateSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
 
             _cachedRenderSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IRenderSystem)
                 .ToDictionary(kvp => kvp.Value.Order, kvp => ((IRenderSystem)_idToSystems[kvp.Key], kvp.Value.ContextId)));
@@ -202,6 +208,18 @@ namespace Ignite
             TogglePendingSystems();
         }
 
+        public void FixedUpdate()
+        {
+            foreach(var (id, (system, contextId)) in _cachedFixedUpdateSystems)
+            {
+                if (_isPaused && _pauseSystems.Contains(id))
+                    continue;
+
+                Context context = _contexts[contextId];
+                system.FixedUpdate(context);
+            }
+        }
+
         /// <summary>
         /// Execute every registered <see cref="IRenderSystem"/>
         /// </summary>
@@ -244,6 +262,7 @@ namespace Ignite
 
             _cachedStartSystems.Clear();
             _cachedUpdateSystems.Clear();
+            _cachedFixedUpdateSystems.Clear();
             _cachedRenderSystems.Clear();
             _cachedExitSystems.Clear();
 
