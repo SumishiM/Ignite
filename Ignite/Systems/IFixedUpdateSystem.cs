@@ -1,6 +1,6 @@
 ﻿namespace Ignite.Systems
 {
-    public interface IFixedUpdateSystem
+    public interface IFixedUpdateSystem : ISystem
     {
         void FixedUpdate(Context context);
     }
