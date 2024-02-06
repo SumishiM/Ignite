@@ -183,10 +183,11 @@ namespace Ignite
             if (HasComponent<T>())
                 return this;
 
+            AddRequiredComponents(component);
+
             Components[_lookup[component.GetType()]] = component;
             component.Parent = this;
             OnComponentAdded?.Invoke(this, _lookup[component]);
-            AddRequiredComponents(component);
             return this;
         }
 
