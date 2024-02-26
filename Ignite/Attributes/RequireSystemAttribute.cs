@@ -1,6 +1,6 @@
 ﻿namespace Ignite.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
     public class RequireSystemAttribute : Attribute
     {
         public Type[] Types = Array.Empty<Type>();

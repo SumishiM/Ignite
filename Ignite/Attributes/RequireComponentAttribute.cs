@@ -7,7 +7,7 @@ namespace Ignite.Attributes
     /// Attribute that tell the Ignite what <see cref="Ignite.Components.IComponent"/>
     /// another <see cref="Ignite.Components.IComponent"/> require.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
     public class RequireComponentAttribute : Attribute
     {
         /// <summary>

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Ignite.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class FilterComponentAttribute : Attribute
     {
         public readonly Context.AccessFilter Filter = Context.AccessFilter.AllOf;
