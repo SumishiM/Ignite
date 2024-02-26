@@ -54,7 +54,7 @@ namespace Ignite
         /// <summary>
         /// Check whether the node has a component of <see cref="Type"/> <typeparamref name="T"/> or not
         /// </summary>
-        public bool HasComponent<T>() where T : class, IComponent
+        public bool HasComponent<T>() where T : IComponent
             => HasComponent(_lookup[typeof(T)]);
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Ignite
         /// <summary>
         /// Get a component of <see cref="Type"/> <typeparamref name="T"/>
         /// </summary>
-        public T GetComponent<T>() where T : class, IComponent
+        public T GetComponent<T>() where T : IComponent
         {
             Debug.Assert(HasComponent<T>(), $"This node doesn't contain this component");
             return (T)Components[_lookup[typeof(T)]];
@@ -159,8 +159,8 @@ namespace Ignite
         /// <summary>
         /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// </summary>
-        public Node AddComponent<T>() where T : class, IComponent, new()
-            => AddComponent(new T());
+        public Node AddComponent<T>() where T : IComponent
+            => AddComponent(typeof(T));
 
         /// <summary>
         /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/>
@@ -178,7 +178,7 @@ namespace Ignite
         /// <summary>
         /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// </summary>
-        public Node AddComponent<T>(T component) where T : class, IComponent
+        public Node AddComponent<T>(T component) where T : IComponent
         {
             if (HasComponent<T>())
                 return this;
@@ -194,8 +194,8 @@ namespace Ignite
         /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// or replace the already set component of the same <see cref="Type"/>
         /// </summary>
-        public Node AddOrReplaceComponent<T>() where T : class, IComponent, new()
-            => AddOrReplaceComponent(new T());
+        public Node AddOrReplaceComponent<T>() where T : IComponent
+            => AddOrReplaceComponent(typeof(T));
 
         /// <summary>
         /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <paramref name="type"/>
