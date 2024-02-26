@@ -24,11 +24,8 @@ namespace Ignite
             {
                 foreach (var requirement in requirements)
                 {
-                    if (Activator.CreateInstance(type) is IComponent requiredComponent)
-                    {
-                        AddComponent(requiredComponent);
-                        builder.Add(requirement, requiredComponent);
-                    }
+                    AddComponent(requirement);
+                    builder.Add(requirement, GetComponent(requirement));
                 }
             }
 
