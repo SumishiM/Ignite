@@ -28,7 +28,7 @@ namespace Ignite
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>
-            public Builder AddComponent<T>(T? component = null) where T : class, IComponent
+            public Builder AddComponent<T>(T? component = default) where T : IComponent
                 => AddComponent(typeof(T), component);
 
             /// <summary>
