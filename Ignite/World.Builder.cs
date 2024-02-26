@@ -12,7 +12,7 @@ namespace Ignite
 
         public class Builder : IDisposable
         {
-            private readonly List<Type> _systemTypes = [];
+            private readonly HashSet<Type> _systemTypes = [];
             private readonly List<(string, Type[])> _defaultEmptyNodes = [];
             private readonly List<(string, IComponent[])> _defaultNodes = [];
 
@@ -40,7 +40,10 @@ namespace Ignite
             /// </summary>
             public Builder AddSystems(params Type[] systems)
             {
-                _systemTypes.AddRange(systems);
+                foreach (var system in systems)
+                {
+                    _systemTypes.Add(system);
+                }
                 return this;
             }
 
