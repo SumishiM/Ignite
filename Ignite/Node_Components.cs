@@ -129,6 +129,12 @@ namespace Ignite
         }
 
         /// <summary>
+        /// Get a component of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
+        public void GetComponent<T>(out T component) where T : IComponent
+            => component = GetComponent<T>();
+
+        /// <summary>
         /// Get a component of <see cref="Type"/> <paramref name="type"/>
         /// </summary>
         public IComponent GetComponent(Type type)
@@ -139,6 +145,12 @@ namespace Ignite
 
             return Components[_lookup[type]];
         }
+
+        /// <summary>
+        /// Get a component of <see cref="Type"/> <paramref name="type"/>
+        /// </summary>
+        public void GetComponent(Type type, out IComponent component)
+            => component = GetComponent(type);
 
         /// <summary>
         /// Get the index of a component of <see cref="Type"/> <typeparamref name="T"/>
@@ -171,14 +183,14 @@ namespace Ignite
                 $"Why are we trying to add/replace a component with a type that isn't a component ?");
 
             if (Activator.CreateInstance(type) is IComponent component)
-                return AddComponent(component);
+                return AddComponent(ref component);
             throw new Exception($"Cannot add component {type}");
         }
 
         /// <summary>
         /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// </summary>
-        public Node AddComponent<T>(T component) where T : IComponent
+        public Node AddComponent<T>(ref T component) where T : IComponent
         {
             if (HasComponent<T>())
                 return this;
@@ -206,14 +218,17 @@ namespace Ignite
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
                 $"Why are we trying to add/replace a component with a type that isn't a component ?");
 
-            return AddOrReplaceComponent((IComponent)Activator.CreateInstance(type)!);
+            if (Activator.CreateInstance(type) is IComponent component)
+                return AddOrReplaceComponent(ref component);
+            // should never execute !!!
+            throw new Exception($"Unable to add a component of type {type}");
         }
 
         /// <summary>
         /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
         /// or replace the already set component of the same <see cref="Type"/>
         /// </summary>
-        public Node AddOrReplaceComponent<T>(T component) where T : class, IComponent
+        public Node AddOrReplaceComponent<T>(ref T component) where T : IComponent
         {
             int index = _lookup[component.GetType()];
             if (Components.ContainsKey(index))

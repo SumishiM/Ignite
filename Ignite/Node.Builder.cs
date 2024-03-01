@@ -28,6 +28,12 @@ namespace Ignite
             /// <summary>
             /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
             /// </summary>
+            public Builder AddComponent<T>(ref T component) where T : struct, IComponent
+                => AddComponent(typeof(T), component);
+
+            /// <summary>
+            /// Add an empty <see cref="IComponent"/> of <see cref="Type"/> <typeparamref name="T"/> or add a given existing component.
+            /// </summary>
             public Builder AddComponent<T>(T? component = default) where T : IComponent
                 => AddComponent(typeof(T), component);
 
@@ -94,10 +100,11 @@ namespace Ignite
 
                 node.AddChildren(b._children);
 
-                foreach (IComponent component in b._components)
+                for (int i = 0; i < b._components.Count; i++)
                 {
+                    IComponent component = b._components[i];
                     if (!node.HasComponent(component.GetType()))
-                        node.AddComponent(component);
+                        node.AddComponent(ref component);
                 }
 
                 foreach (Type type in b._componentsTypes)
