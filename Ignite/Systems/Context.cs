@@ -379,7 +379,7 @@ namespace Ignite.Systems
                     // may not be optimize but do the work
                     foreach (var index in FilteredComponents)
                     {
-                        _components[index].Add(node.Id, node.Components[index]);
+                        _components[index].TryAdd(node.Id, node.Components[index]);
                     }
 
                     _cachedComponents = null;
