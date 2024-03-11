@@ -99,7 +99,7 @@ namespace Ignite.Systems
         /// <summary>
         /// Components targeted by this context filter
         /// </summary>
-        private readonly ImmutableDictionary<AccessFilter, ImmutableArray<int>> _targetComponents;
+        private readonly ImmutableDictionary<AccessFilter, ImmutableHashSet<int>> _targetComponents;
 
         /// <summary>
         /// Components sorted by <see cref="AccessKind"/>
@@ -134,9 +134,9 @@ namespace Ignite.Systems
         {
             _lookup = world.Lookup;
 
-            _targetComponents = new Dictionary<AccessFilter, ImmutableArray<int>>()
+            _targetComponents = new Dictionary<AccessFilter, ImmutableHashSet<int>>()
             {
-                { filter, components.ToImmutableArray() }
+                { filter, components.ToImmutableHashSet() }
             }.ToImmutableDictionary();
 
             _componentsAccess = ImmutableDictionary<AccessKind, ImmutableHashSet<int>>.Empty;
@@ -153,7 +153,7 @@ namespace Ignite.Systems
             foreach (var (filter, collection) in orderedComponentsFilter)
             {
                 components.Add(-(int)filter);
-                components.AddRange(collection.Sort());
+                components.AddRange(collection.Order());
             }
 
             // hash [-1000, 1000]
@@ -175,17 +175,33 @@ namespace Ignite.Systems
         /// </summary>
         /// <returns>A list of <see cref="Ignite.Attributes.FilterComponentAttribute"/> associated 
         /// with a list of <see cref="Ignite.Components.IComponent"/> indices set by the filter.</returns>
-        private ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> CreateFilters(ISystem system)
+        private ImmutableArray<(FilterComponentAttribute, ImmutableHashSet<int>)> CreateFilters(ISystem system)
         {
-            var builder = ImmutableArray.CreateBuilder<(FilterComponentAttribute, ImmutableArray<int>)>();
+            var builder = ImmutableArray.CreateBuilder<(FilterComponentAttribute, ImmutableHashSet<int>)>();
 
+            RequireComponentAttribute[] requirements = [];
             FilterComponentAttribute[] filters = (FilterComponentAttribute[])system.GetType()
                 .GetCustomAttributes(typeof(FilterComponentAttribute), true);
 
+
             foreach (var filter in filters)
             {
-                builder.Add((filter, filter.Types.Select(t => _lookup[t]).ToImmutableArray()));
+                // add all types filtered by attribute
+                builder.Add((filter, filter.Types.Select(t => _lookup[t]).ToImmutableHashSet()));
+
+                foreach (var type in filter.Types)
+                {
+                    // add required components types for filtered components
+                    requirements = (RequireComponentAttribute[])type.GetType()
+                        .GetCustomAttributes(typeof(RequireComponentAttribute), true);
+
+                    foreach (var required in requirements)
+                    {
+                        builder.Add((filter, required.Types.Select(t => _lookup[t]).ToImmutableHashSet()));
+                    }
+                }
             }
+
 
             return builder.ToImmutableArray();
         }
@@ -202,28 +218,28 @@ namespace Ignite.Systems
         /// A dictionary of list of <see cref="Ignite.Components.IComponent"/> indices 
         /// sorted by <see cref="AccessFilter"/>
         /// </returns>
-        private ImmutableDictionary<AccessFilter, ImmutableArray<int>> CreateTargetComponents(
-            ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> filters)
+        private ImmutableDictionary<AccessFilter, ImmutableHashSet<int>> CreateTargetComponents(
+            ImmutableArray<(FilterComponentAttribute, ImmutableHashSet<int>)> filters)
         {
-            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableArray<int>>();
+            var builder = ImmutableDictionary.CreateBuilder<AccessFilter, ImmutableHashSet<int>>();
 
             foreach (var (filter, targets) in filters)
             {
                 if (filter.Filter is AccessFilter.NoFilter)
                 {
                     // No-op just set no filter 
-                    builder[AccessFilter.NoFilter] = ImmutableArray<int>.Empty;
+                    builder[AccessFilter.NoFilter] = ImmutableHashSet<int>.Empty;
                     continue;
                 }
 
-                if (targets.IsDefaultOrEmpty)
+                if (targets.IsEmpty)
                     // No-op there is no targets to add
                     continue;
 
                 if (builder.TryGetValue(filter.Filter, out var value))
                 {
                     // Add targets to the other targets
-                    builder[filter.Filter] = value.Union(targets).ToImmutableArray();
+                    builder[filter.Filter] = value.Union(targets).ToImmutableHashSet();
                 }
                 else
                 {
@@ -247,7 +263,7 @@ namespace Ignite.Systems
         /// sorted by <see cref="AccessKind"/>
         /// </returns>
         private ImmutableDictionary<AccessKind, ImmutableHashSet<int>> CreateOperationsKind(
-            ImmutableArray<(FilterComponentAttribute, ImmutableArray<int>)> filters)
+            ImmutableArray<(FilterComponentAttribute, ImmutableHashSet<int>)> filters)
         {
             var builder = ImmutableDictionary.CreateBuilder<AccessKind, ImmutableHashSet<int>>();
 
