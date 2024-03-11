@@ -127,6 +127,11 @@ namespace Ignite.Systems
 
             FilteredComponents = [.. _componentsAccess[AccessKind.Read], .. _componentsAccess[AccessKind.Write]];
 
+            foreach (var typeIndex in FilteredComponents)
+            {
+                _components[typeIndex] = [];
+            }
+
             _id = GetOrCreateId();
         }
 
@@ -141,6 +146,11 @@ namespace Ignite.Systems
 
             _componentsAccess = ImmutableDictionary<AccessKind, ImmutableHashSet<int>>.Empty;
             FilteredComponents = [.. components];
+
+            foreach (var typeIndex in FilteredComponents)
+            {
+                _components[typeIndex] = [];
+            }
 
             _id = GetOrCreateId();
         }
