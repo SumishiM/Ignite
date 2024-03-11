@@ -9,6 +9,16 @@ namespace Ignite.Components
         protected ImmutableDictionary<Type, int> _componentsIndex =
             new Dictionary<Type, int>() { }.ToImmutableDictionary();
 
+        private ImmutableDictionary<int, Type>? _componentsTypes = null;
+        protected ImmutableDictionary<int, Type> ComponentsTypes
+        {
+            get
+            {
+                _componentsTypes ??= _componentsIndex.ToImmutableDictionary(kvp => kvp.Value, kvp => kvp.Key);
+                return _componentsTypes;
+            }
+        }
+
         internal ImmutableDictionary<int, ImmutableHashSet<Type>> RequiredComponentsLookup =
             new Dictionary<int, ImmutableHashSet<Type>>() { }.ToImmutableDictionary();
 
@@ -51,8 +61,6 @@ namespace Ignite.Components
         /// </summary>
         /// <param name="type"><see cref="Type"/> of the component we want the index of</param>
         /// <returns>Index of the component</returns>
-        // todo : Change GetIndex by GetOrCreateIndex ? 
-        // should not be an issue with the generator tbh
         public int this[Type type] => GetOrCreateIndex(type);
 
         /// <summary>
@@ -86,6 +94,14 @@ namespace Ignite.Components
 
             return _componentsIndex[type];
         }
+
+        /// <summary>
+        /// Get the <see cref="Type"/> of a component from it's index
+        /// </summary>
+        /// <param name="index">Index of the <see cref="IComponent"/></param>
+        /// <returns><see cref="Type"/> of the <see cref="IComponent"/></returns>
+        public Type GetTypeFromIndex(int index)
+            => ComponentsTypes[index];
 
         /// <summary>
         /// Get the index of the component of <see cref="Type"/> <typeparamref name="T"/>

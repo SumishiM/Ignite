@@ -2,6 +2,8 @@
 using Ignite.Components;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Dynamic;
+using System.Xml.Linq;
 
 namespace Ignite.Systems
 {
@@ -13,8 +15,17 @@ namespace Ignite.Systems
         public enum AccessFilter
         {
             NoFilter,
+            /// <summary>
+            /// Filter systems with any of the components listed
+            /// </summary>
             AnyOf,
+            /// <summary>
+            /// Filter systems with all of the components listed
+            /// </summary>
             AllOf,
+            /// <summary>
+            /// Filter systems with none of the components listed
+            /// </summary>
             NoneOf,
         }
 
@@ -43,20 +54,31 @@ namespace Ignite.Systems
         private readonly Dictionary<ulong, Node> _nodes = [];
         private ImmutableArray<Node>? _cachedNodes = null;
 
-
-        //private ImmutableDictionary<Type, ImmutableArray<IComponent>>? _cachedComponents = null;
-        //private Dictionary<Type, List<IComponent>> _components;
-        //public ImmutableDictionary<Type, ImmutableArray<IComponent>> Components
-        //{
-        //    get
-        //    {
-        //        _cachedComponents ??= _components.ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        //        return _cachedComponents;
-        //    }
-        //}
+        /// <summary>
+        /// Tracked components per types for each node
+        /// </summary>
+        private readonly Dictionary<int, Dictionary<ulong, IComponent>> _components = [];
+        private ImmutableDictionary<Type, ImmutableArray<IComponent>>? _cachedComponents = null;
 
         /// <summary>
-        /// Every nodes filtered by the context
+        /// Components filtered in context. Note that this operation can take a bit of time if it's the first time since context modification.
+        /// </summary>
+        public ImmutableDictionary<Type, ImmutableArray<IComponent>> Components
+        {
+            get
+            {
+                _cachedComponents ??= _components.ToImmutableDictionary(
+                    kvp => _lookup.GetTypeFromIndex(kvp.Key),
+                    kvp => kvp.Value.Where(kvp => !_disabledNodes.Contains(kvp.Key))
+                        .ToDictionary().Values
+                        .ToImmutableArray());
+
+                return _cachedComponents;
+            }
+        }
+
+        /// <summary>
+        /// Every nodes filtered in context
         /// </summary>
         public ImmutableArray<Node> Nodes
         {
@@ -85,13 +107,14 @@ namespace Ignite.Systems
 
         internal ImmutableHashSet<int> ReadComponents => _componentsAccess[AccessKind.Read];
         internal ImmutableHashSet<int> WriteComponents => _componentsAccess[AccessKind.Write];
+        internal ImmutableHashSet<int> FilteredComponents { get; private set; }
 
         /// <summary>
         /// Whether the world have a filter or not
         /// </summary>
         public bool IsNoFilter => _targetComponents.ContainsKey(AccessFilter.NoFilter);
 
-        private ComponentLookupTable _lookup;
+        private readonly ComponentLookupTable _lookup;
 
         public Context(World world, ISystem system)
         {
@@ -100,6 +123,8 @@ namespace Ignite.Systems
             var filters = CreateFilters(system);
             _targetComponents = CreateTargetComponents(filters);
             _componentsAccess = CreateOperationsKind(filters);
+
+            FilteredComponents = [.. _componentsAccess[AccessKind.Read], .. _componentsAccess[AccessKind.Write]];
 
             _id = GetOrCreateId();
         }
@@ -114,6 +139,7 @@ namespace Ignite.Systems
             }.ToImmutableDictionary();
 
             _componentsAccess = ImmutableDictionary<AccessKind, ImmutableHashSet<int>>.Empty;
+            FilteredComponents = [.. components];
 
             _id = GetOrCreateId();
         }
@@ -315,6 +341,13 @@ namespace Ignite.Systems
                 if (node.IsEnabled)
                 {
                     _nodes[node.Id] = node;
+                    // may not be optimize but do the work
+                    foreach (var index in FilteredComponents)
+                    {
+                        _components[index].Add(node.Id, node.Components[index]);
+                    }
+
+                    _cachedComponents = null;
                     _cachedNodes = null;
                 }
             }
@@ -353,6 +386,7 @@ namespace Ignite.Systems
 
             _nodes.Add(node.Id, node);
             _cachedNodes = null;
+            _cachedComponents = null;
 
             OnNodeEnabledInContext?.Invoke(node);
             _disabledNodes.Remove(node.Id);
@@ -365,12 +399,18 @@ namespace Ignite.Systems
 
             _nodes.Remove(node.Id);
             _cachedNodes = null;
+            _cachedComponents = null;
 
             OnNodeDisabledInContext?.Invoke(node);
 
             _disabledNodes.Add(node.Id);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="component"></param>
         internal void OnNodeModified(Node node, int component)
         {
             bool isFiltered = IsValid(node);
@@ -384,10 +424,12 @@ namespace Ignite.Systems
 
         internal void StartWatchingNode(Node node, int component)
         {
+            // register components events
             node.OnComponentAdded += OnNodeComponentAddedInContext;
             node.OnComponentRemoved += OnNodeComponentRemovedInContext;
             node.OnComponentModified += OnNodeComponentModifiedInContext;
 
+            // register node events
             node.OnEnabled += OnNodeEnabledInContext;
             node.OnDisabled += OnNodeDisabledInContext;
 
@@ -395,17 +437,29 @@ namespace Ignite.Systems
             {
                 OnNodeComponentAddedInContext?.Invoke(node, component);
 
+                // set node as enable
                 _nodes.Add(node.Id, node);
+
+                // reset cache
                 _cachedNodes = null;
+                _cachedComponents = null;
             }
             else
             {
+                // set node as disable
                 _disabledNodes.Add(node.Id);
             }
         }
 
+        /// <summary>
+        /// End node watching, removing it from context
+        /// </summary>
+        /// <param name="node">Watched <see cref="Node"/></param>
+        /// <param name="component">Component index</param>
+        /// <param name="fromDestroy"></param>
         private void StopWatchingNode(Node node, int component, bool fromDestroy)
         {
+            // unsubscribe actions
             node.OnComponentAdded -= OnNodeComponentAddedInContext;
             node.OnComponentRemoved -= OnNodeComponentRemovedInContext;
             node.OnComponentModified -= OnNodeComponentModifiedInContext;
@@ -422,11 +476,20 @@ namespace Ignite.Systems
                 //Debug.Assert(!_nodes.ContainsKey(node.Id),
                 //    $"Why is a disabled node in the collection?");
 
+                // remove from disabled if disabled
                 _disabledNodes.Remove(node.Id);
             }
 
+            // remove node and components
             _nodes.Remove(node.Id);
+            foreach (var (_, components) in _components)
+            {
+                components.Remove(node.Id);
+            }
+
+            // reset cache
             _cachedNodes = null;
+            _cachedComponents = null;
         }
 
 
@@ -439,6 +502,9 @@ namespace Ignite.Systems
 
             OnNodeEnabledInContext = null;
             OnNodeDisabledInContext = null;
+
+            _components.Clear();
+            _cachedComponents = null;
 
             _nodes.Clear();
             _cachedNodes = null;
