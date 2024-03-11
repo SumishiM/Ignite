@@ -189,7 +189,6 @@ namespace Ignite.Systems
         {
             var builder = ImmutableArray.CreateBuilder<(FilterComponentAttribute, ImmutableHashSet<int>)>();
 
-            RequireComponentAttribute[] requirements = [];
             FilterComponentAttribute[] filters = (FilterComponentAttribute[])system.GetType()
                 .GetCustomAttributes(typeof(FilterComponentAttribute), true);
 
@@ -201,8 +200,9 @@ namespace Ignite.Systems
 
                 foreach (var type in filter.Types)
                 {
+                    Console.WriteLine(type.CustomAttributes.LongCount());
                     // add required components types for filtered components
-                    requirements = (RequireComponentAttribute[])type.GetType()
+                    RequireComponentAttribute[] requirements = (RequireComponentAttribute[])type
                         .GetCustomAttributes(typeof(RequireComponentAttribute), true);
 
                     foreach (var required in requirements)
@@ -310,7 +310,7 @@ namespace Ignite.Systems
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T1)]), $"{typeof(T1).Name} isn't filtered by this context !");
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T2)]), $"{typeof(T2).Name} isn't filtered by this context !");
 
-            return (IEnumerable<(T1, T2)>)Components[typeof(T1)].Zip(Components[typeof(T2)]);
+            return Components[typeof(T1)].Cast<T1>().Zip(Components[typeof(T2)].Cast<T2>());
         }
 
 
