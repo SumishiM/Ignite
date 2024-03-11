@@ -3,6 +3,7 @@ using Ignite.Components;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Ignite.Systems
@@ -269,6 +270,24 @@ namespace Ignite.Systems
             return builder.ToImmutableDictionary();
         }
 
+        public IEnumerable<T> Get<T>() where T : IComponent
+        {
+            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T)]), $"{typeof(T).Name} isn't filtered by this context !");
+
+            return Components[typeof(T)].Cast<T>();
+        }
+
+        public IEnumerable<(T1, T2)> Get<T1, T2>()
+            where T1 : IComponent
+            where T2 : IComponent
+        {
+            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T1)]), $"{typeof(T1).Name} isn't filtered by this context !");
+            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T2)]), $"{typeof(T2).Name} isn't filtered by this context !");
+
+            return (IEnumerable<(T1, T2)>)Components[typeof(T1)].Zip(Components[typeof(T2)]);
+        }
+
+
         /// <summary>
         /// Check whether a <see cref="Ignite.Node"/> is accepted by this <see cref="Context"/> criteria or not
         /// </summary>
@@ -422,6 +441,11 @@ namespace Ignite.Systems
                 StopWatchingNode(node, component, false);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="component"></param>
         internal void StartWatchingNode(Node node, int component)
         {
             // register components events
