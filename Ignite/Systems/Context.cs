@@ -149,7 +149,7 @@ namespace Ignite.Systems
 
             foreach (var typeIndex in FilteredComponents)
             {
-                _components[typeIndex] = []; // init default value
+                _components[typeIndex] = [];
             }
 
             _id = GetOrCreateId();
@@ -189,7 +189,6 @@ namespace Ignite.Systems
         {
             var builder = ImmutableArray.CreateBuilder<(FilterComponentAttribute, ImmutableHashSet<int>)>();
 
-            RequireComponentAttribute[] requirements;
             FilterComponentAttribute[] filters = (FilterComponentAttribute[])system.GetType()
                 .GetCustomAttributes(typeof(FilterComponentAttribute), true);
 
@@ -199,11 +198,12 @@ namespace Ignite.Systems
                 // add all types filtered by attribute
                 builder.Add((filter, filter.Types.Select(t => _lookup[t]).ToImmutableHashSet()));
 
-                // check for requirements
                 foreach (var type in filter.Types)
                 {
+                    Console.WriteLine(type.CustomAttributes.LongCount());
                     // add required components types for filtered components
-                    requirements = (RequireComponentAttribute[])type.GetCustomAttributes(typeof(RequireComponentAttribute), true);
+                    RequireComponentAttribute[] requirements = (RequireComponentAttribute[])type
+                        .GetCustomAttributes(typeof(RequireComponentAttribute), true);
 
                     foreach (var required in requirements)
                     {
@@ -249,7 +249,7 @@ namespace Ignite.Systems
                 if (builder.TryGetValue(filter.Filter, out var value))
                 {
                     // Add targets to the other targets
-                    builder[filter.Filter] = value.Union(targets);
+                    builder[filter.Filter] = value.Union(targets).ToImmutableHashSet();
                 }
                 else
                 {
@@ -296,56 +296,21 @@ namespace Ignite.Systems
             return builder.ToImmutableDictionary();
         }
 
-        /// <summary>
-        /// Get components as an enumerable
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public IEnumerable<T> Get<T>() where T : IComponent
+        public ImmutableArray<T> Get<T>() where T : IComponent
         {
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T)]), $"{typeof(T).Name} isn't filtered by this context !");
 
-            return Components[typeof(T)].Cast<T>();
+            return (ImmutableArray<T>)(object)Components[typeof(T)];
         }
 
-        /// <summary>
-        /// Get components of different as an enumerable 
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <returns></returns>
-        public IEnumerable<(T1, T2)> Get<T1, T2>()
+        public ImmutableArray<(T1 First, T2 Second)> Get<T1, T2>()
             where T1 : IComponent
             where T2 : IComponent
         {
-            Debug.Assert(typeof(T1) != typeof(T2), "Types should be different !");
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T1)]), $"{typeof(T1).Name} isn't filtered by this context !");
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T2)]), $"{typeof(T2).Name} isn't filtered by this context !");
 
-            return Components[typeof(T1)].Cast<T1>().Zip(Components[typeof(T2)].Cast<T2>());
-        }
-
-        /// <summary>
-        /// Get components of different as an enumerable 
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <returns></returns>
-        public IEnumerable<(T1, T2, T3)> Get<T1, T2, T3>()
-            where T1 : IComponent
-            where T2 : IComponent
-            where T3 : IComponent
-        {
-            Debug.Assert(typeof(T1) != typeof(T2) && typeof(T2) != typeof(T3), "Types should be different !");
-            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T1)]), $"{typeof(T1).Name} isn't filtered by this context !");
-            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T2)]), $"{typeof(T2).Name} isn't filtered by this context !");
-            Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T3)]), $"{typeof(T3).Name} isn't filtered by this context !");
-
-            return Components[typeof(T1)].Cast<T1>()
-                .Zip(
-                    Components[typeof(T2)].Cast<T2>(),
-                    Components[typeof(T3)].Cast<T3>());
+            return Components[typeof(T1)].Zip(Components[typeof(T2)], (first, second) => ((T1)first, (T2)second)).ToImmutableArray();
         }
 
 
@@ -424,23 +389,6 @@ namespace Ignite.Systems
                     // may not be optimize but do the work
                     foreach (var index in FilteredComponents)
                     {
-                        if (_targetComponents[AccessFilter.AnyOf].Contains(index))
-                        {
-                            if (node.HasComponent(index))
-                                _components[index].TryAdd(node.Id, node.Components[index]);
-                        }
-
-                        if (_targetComponents[AccessFilter.AllOf].Contains(index))
-                        {
-                            if (node.HasComponent(index))
-                            {
-                                _components[index].TryAdd(node.Id, node.Components[index]);
-                            }
-                            else
-                            {
-                                throw new InvalidDataException($"The node doesn't contains the component {_lookup.GetTypeFromIndex(index)} !");
-                            }
-                        }
                         _components[index].TryAdd(node.Id, node.Components[index]);
                     }
 
