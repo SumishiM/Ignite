@@ -55,7 +55,13 @@ namespace Ignite
         /// Check whether the node has a component of <see cref="Type"/> <typeparamref name="T"/> or not
         /// </summary>
         public bool HasComponent<T>() where T : IComponent
-            => HasComponent(_lookup[typeof(T)]);
+        {
+            if (typeof(T).DeclaringType is Type DeclaringType)
+            {
+                return HasComponent(DeclaringType);
+            }
+            return HasComponent(typeof(T));
+        }
 
         /// <summary>
         /// Check whether the node has a component of <see cref="Type"/> <paramref name="type"/> or not
@@ -182,8 +188,12 @@ namespace Ignite
             Debug.Assert(typeof(IComponent).IsAssignableFrom(type),
                 $"Why are we trying to add/replace a component with a type that isn't a component ?");
 
+            if (HasComponent(type))
+                return this;
+
             if (Activator.CreateInstance(type) is IComponent component)
-                return AddComponent(ref component);
+                return AddComponent(type, ref component);
+
             throw new Exception($"Cannot add component {type}");
         }
 
@@ -199,6 +209,21 @@ namespace Ignite
 
             Components[_lookup[component.GetType()]] = component;
             OnComponentAdded?.Invoke(this, _lookup[component]);
+            return this;
+        }
+
+        /// <summary>
+        /// Add a <paramref name="component"/> of <see cref="Type"/> <typeparamref name="T"/>
+        /// </summary>
+        public Node AddComponent(Type type, ref IComponent component)
+        {
+            if (HasComponent(type))
+                return this;
+
+            AddRequiredComponents(component);
+
+            Components[_lookup[type]] = component;
+            OnComponentAdded?.Invoke(this, _lookup[type]);
             return this;
         }
 

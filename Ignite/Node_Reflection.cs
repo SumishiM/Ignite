@@ -19,7 +19,8 @@ namespace Ignite
             {
                 foreach (var requirement in requirements)
                 {
-                    AddComponent(requirement);
+                    //if (!HasComponent(requirement))
+                        AddComponent(requirement);
                 }
             }
         }
