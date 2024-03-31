@@ -200,7 +200,6 @@ namespace Ignite.Systems
 
                 foreach (var type in filter.Types)
                 {
-                    Console.WriteLine(type.CustomAttributes.LongCount());
                     // add required components types for filtered components
                     RequireComponentAttribute[] requirements = (RequireComponentAttribute[])type
                         .GetCustomAttributes(typeof(RequireComponentAttribute), true);
