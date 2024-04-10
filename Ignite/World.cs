@@ -8,13 +8,6 @@ using static Ignite.Node;
 
 namespace Ignite
 {
-    /// <summary>
-    /// <para>
-    /// Whats left ?
-    /// Register nodes automatically
-    /// Get lookup table
-    /// </para>
-    /// </summary>
     public partial class World : IDisposable
     {
         // events
@@ -120,7 +113,7 @@ namespace Ignite
             _ignorePauseSystems = ignorePauseSystems.ToImmutable();
 
             _idToSystems = idToSystems.ToImmutable();
-            _typeToSystem = idToSystems.ToImmutableDictionary(system => system.Value.GetType(), system => system.Key);
+            TypeToSystem = idToSystems.ToImmutableDictionary(system => system.Value.GetType(), system => system.Key);
 
             // cache systems from type
             _cachedStartSystems = new(_systems.Where(kvp => _idToSystems[kvp.Key] is IStartSystem)

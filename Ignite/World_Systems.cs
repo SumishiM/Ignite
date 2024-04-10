@@ -45,7 +45,7 @@ namespace Ignite
         /// <summary>
         /// Types to system id
         /// </summary>
-        private readonly ImmutableDictionary<Type, int> _typeToSystem;
+        internal readonly ImmutableDictionary<Type, int> TypeToSystem;
 
         /// <summary>
         /// Ids of the systems that can pause
@@ -107,7 +107,7 @@ namespace Ignite
             Debug.Assert(typeof(ISystem).IsAssignableFrom(type), 
                 $"Why are we trying to enable a system from a type that isn't ?");
             
-            if (!_typeToSystem.TryGetValue(type, out int id))
+            if (!TypeToSystem.TryGetValue(type, out int id))
             {
                 return false;
             }
@@ -160,7 +160,7 @@ namespace Ignite
             Debug.Assert(typeof(ISystem).IsAssignableFrom(type),
                 $"Why are we trying to disable a system from a type that isn't ?");
 
-            if (!_typeToSystem.TryGetValue(type, out int id))
+            if (!TypeToSystem.TryGetValue(type, out int id))
             {
                 return false;
             }
@@ -255,5 +255,11 @@ namespace Ignite
             _contexts.Add(context.Id, context);
             return context.Id;
         }
+
+        /// <summary>
+        /// Get the id of a context already in the world or create a new context
+        /// </summary>
+        private int GetOrCreateContext(Context.AccessFilter filter, params Type[] components)
+            => GetOrCreateContext(filter, components.Select(t => Lookup[t]).ToArray());
     }
 }

@@ -87,7 +87,9 @@ namespace Ignite
             if (Root == null) return;
             Debug.Assert(Nodes.TryAdd(node.Id, node),
                 $"A node with this Id ({node.Id}) is already registered in the world !");
-
+            
+            node.World = this;
+            
             if (node.Parent == null)
                 Root.AddChild(node);
 

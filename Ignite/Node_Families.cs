@@ -17,6 +17,7 @@ namespace Ignite
         /// Parent node in the hierarchy
         /// </summary>
         public Node? Parent => _parent;
+        
 
         /// <summary>
         /// Every nodes set as children of this node
@@ -38,14 +39,14 @@ namespace Ignite
         /// </summary>
         public void SetParent(Node? parent)
         {
-            if(_parent != null && _parent != parent)
+            if (_parent != null && _parent != parent)
                 _parent.RemoveChild(this);
 
             if (parent == null)
                 parent = World.Root;
             else
                 _parent = parent;
-            
+
             OnParentChanged?.Invoke(this, parent);
         }
 
