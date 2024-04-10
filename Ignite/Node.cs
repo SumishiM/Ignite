@@ -28,27 +28,7 @@
         /// </summary>
         public bool IgnorePause { get; private set; } = false;
 
-        private World _world; 
-        public World World
-        {
-            get
-            {
-                return _world;
-            }
-
-            internal set
-            {
-                if (_world != value)
-                {
-                    _world = value;
-                    foreach (var (_, child) in _children)
-                    {
-                        child.World = value;
-                    }
-                }
-            }
-        }
-
+        public World World { get; private set; }
         public string Name { get; set; } = "Unnamed Node";
 
         [System.Flags]
@@ -61,7 +41,7 @@
 
         public Node(World world, string name = "Unnamed Node")
         {
-            _world = world;
+            World = world;
             _lookup = world.Lookup;
             Name = name;
 
