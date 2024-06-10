@@ -56,15 +56,18 @@ namespace Ignite
 
         public World(IList<ISystem> systems)
         {
-            Nodes = [];
+            Nodes = new(128);
 
             _UIDGenerator = new UIDGenerator();
 
             Lookup = FindLookupTableImplementation();
             Lookup.CheckRequirements();
 
-            _systemsInitialized = [];
-            _pendingToggleSystems = [];
+            _systemsInitialized = new(20);
+            _pendingToggleSystems = new(20);
+            _pendingAddSystems = [];
+            _pendingRemoveSystems = [];
+            _pendingDestroyNodes = [];
 
 
             var pauseSystems = ImmutableHashSet.CreateBuilder<int>();
@@ -72,13 +75,14 @@ namespace Ignite
 
             var idToSystems = ImmutableDictionary.CreateBuilder<int, ISystem>();
 
-            _contexts = [];
-            _systems = [];
+            _contexts = new(20);
+            _systems = new(20);
 
             for (int i = 0; i < systems.Count; i++)
             {
                 ISystem system = systems[i];
                 Context context = new(this, system);
+                int id = ++_lastSystemId;
 
                 // check context
                 if (_contexts.TryGetValue(context.Id, out Context? value))
@@ -93,19 +97,19 @@ namespace Ignite
                 // pause
                 if (DoSystemIgnorePause(system))
                 {
-                    ignorePauseSystems.Add(i);
+                    ignorePauseSystems.Add(id);
                 }
                 else if (CanSystemPause(system))
                 {
-                    pauseSystems.Add(i);
+                    pauseSystems.Add(id);
                 }
 
-                idToSystems.Add(i, system);
-                _systems.Add(i, new SystemInfo
+                idToSystems.Add(id, system);
+                _systems.Add(id, new SystemInfo
                 {
                     ContextId = context.Id,
-                    Index = i,
-                    Order = i // maybe make an algo to check systems dependency on other systems
+                    Index = id,
+                    Order = id // maybe make an algo to check systems dependency on other systems
                 });
             }
 

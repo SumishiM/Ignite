@@ -49,6 +49,7 @@ namespace Ignite
                 {
                     if (!_components.Any(c => c.GetType() == type))
                     {
+                        // need a fix for components using constructors
                         if (Activator.CreateInstance(type, false) is IComponent c)
                             _components.Add(c);
                     }

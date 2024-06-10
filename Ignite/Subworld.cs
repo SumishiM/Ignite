@@ -31,10 +31,18 @@ namespace Ignite
 
         internal ImmutableArray<Type> Systems;
 
+        internal ImmutableArray<Type> StartSystems;
+        internal ImmutableArray<Type> UpdateSystems;
+        internal ImmutableArray<Type> FixedUpdateSystems;
+        internal ImmutableArray<Type> RenderSystems;
+        internal ImmutableArray<Type> ExitSystems;
+
         public Subworld([DisallowNull]Ignite.Node from)
         {
             Root = new(from);
             Systems = GetAllRequiredSystems(from.World);
+
+            
         }
 
         private ImmutableHashSet<int> GetAllComponentsIndex(Node node)

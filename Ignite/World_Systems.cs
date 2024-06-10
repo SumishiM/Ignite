@@ -1,6 +1,7 @@
 ﻿using Ignite.Systems;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO.Compression;
 
 namespace Ignite
 {
@@ -68,9 +69,120 @@ namespace Ignite
         private readonly Dictionary<int, bool> _pendingToggleSystems;
 
         /// <summary>
-        /// Contexts created for teh systems in the world
+        /// Contexts created for the systems in the world
         /// </summary>
         private readonly Dictionary<int, Context> _contexts;
+
+        /// <summary>
+        /// Systems types wanting to be added in world
+        /// </summary>
+        private readonly List<Type> _pendingAddSystems;
+
+        /// <summary>
+        /// Systems ids wanting to be removed
+        /// </summary>
+        private readonly HashSet<int> _pendingRemoveSystems;
+
+        private int _lastSystemId;
+
+        private void AddSystem<T>(bool immediate = false) where T : ISystem
+            => AddSystem(typeof(T), immediate);
+
+        private void AddSystem(Type type, bool immediate = false)
+        {
+            if (!immediate)
+            {
+                if (!_pendingAddSystems.Contains(type))
+                    _pendingAddSystems.Add(type);
+                return;
+            }
+
+            if (Activator.CreateInstance(type) is not ISystem system)
+                return;
+
+            Context context = new(this, system);
+            int id = ++_lastSystemId;
+
+            // check context
+            if (_contexts.TryGetValue(context.Id, out Context? value))
+            {
+                context = value;
+            }
+            else
+            {
+                _contexts.Add(context.Id, context);
+            }
+
+
+            // pause
+            if (DoSystemIgnorePause(system))
+            {
+                _ignorePauseSystems.Add(id);
+            }
+            else if (CanSystemPause(system))
+            {
+                _pauseSystems.Add(id);
+            }
+
+            _idToSystems.Add(id, system);
+            _systems.Add(id, new SystemInfo
+            {
+                ContextId = context.Id,
+                Index = id,
+                Order = id // maybe make an algo to check systems dependency on other systems
+            });
+
+            TypeToSystem.Add(system.GetType(), id);
+
+            if (system is IStartSystem startSystem) _cachedStartSystems.Add(id, (startSystem, context.Id));
+            if (system is IUpdateSystem updateSystem) _cachedUpdateSystems.Add(id,(updateSystem, context.Id));
+            if (system is IFixedUpdateSystem fixedUpdateSystem) _cachedFixedUpdateSystems.Add(id, (fixedUpdateSystem, context.Id));
+            if (system is IRenderSystem renderSystem) _cachedRenderSystems.Add(id, (renderSystem, context.Id));
+            if (system is IExitSystem exitSystem) _cachedExitSystems.Add(id, (exitSystem, context.Id));
+        }
+
+        public void RemoveSystem<T>(bool immediate = false) where T : ISystem
+            => RemoveSystem(typeof(T), immediate);
+
+        public void RemoveSystem(Type type, bool immediate = false)
+        {
+            if (!TypeToSystem.TryGetValue(type, out int id))
+                return; // ? system not registered in world
+
+            // if not immediate, we register the system id to wait for remove
+            if (!immediate)
+            {
+                _pendingRemoveSystems.Add(id);
+                return;
+            }
+
+            // check if any other system uses the same context
+            if (_systems.Any(s => s.Key != id && s.Value.ContextId == _systems[id].ContextId))
+            {
+                // remove context related to the system
+                _contexts.Remove(_systems[id].ContextId);
+            }
+
+            //remove the system from world cache 
+            _systems.Remove(id);
+            _idToSystems.Remove(id);
+            TypeToSystem.Remove(type);
+            _systemsInitialized.Remove(id);
+
+            if (_cachedStartSystems.ContainsKey(id)) _cachedStartSystems.Remove(id);
+            if (_cachedUpdateSystems.ContainsKey(id)) _cachedUpdateSystems.Remove(id);
+            if (_cachedFixedUpdateSystems.ContainsKey(id)) _cachedFixedUpdateSystems.Remove(id);
+            if (_cachedRenderSystems.ContainsKey(id)) _cachedRenderSystems.Remove(id);
+            if (_cachedExitSystems.ContainsKey(id)) _cachedExitSystems.Remove(id);
+        }
+
+        private void RemovePendingSystems()
+        {
+            foreach (var systemId in _pendingRemoveSystems)
+            {
+                RemoveSystem(_idToSystems[systemId].GetType(), true);
+            }
+        }
 
 
 
@@ -104,14 +216,14 @@ namespace Ignite
         /// <param name="immediate">Whether the system should be enabled immediatly</param>
         public bool EnableSystem(Type type, bool immediate = false)
         {
-            Debug.Assert(typeof(ISystem).IsAssignableFrom(type), 
+            Debug.Assert(typeof(ISystem).IsAssignableFrom(type),
                 $"Why are we trying to enable a system from a type that isn't ?");
-            
+
             if (!TypeToSystem.TryGetValue(type, out int id))
             {
                 return false;
             }
-            
+
             return EnableSystem(id, immediate);
         }
 
@@ -242,7 +354,7 @@ namespace Ignite
         private int GetOrCreateContext(Context.AccessFilter filter, params int[] components)
         {
             Context context = new(this, filter, components);
-            if( _contexts.ContainsKey(context.Id))
+            if (_contexts.ContainsKey(context.Id))
             {
                 return context.Id;
             }
