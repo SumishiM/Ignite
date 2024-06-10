@@ -49,7 +49,7 @@ namespace Ignite
                 {
                     if (!_components.Any(c => c.GetType() == type))
                     {
-                        if (Activator.CreateInstance(type) is IComponent c)
+                        if (Activator.CreateInstance(type, false) is IComponent c)
                             _components.Add(c);
                     }
                 }

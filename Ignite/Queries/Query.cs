@@ -1,6 +1,5 @@
 ﻿using Ignite.Systems;
 
-
 namespace Ignite.Queries
 {
     public class Query

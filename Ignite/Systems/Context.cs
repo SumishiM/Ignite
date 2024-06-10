@@ -298,8 +298,8 @@ namespace Ignite.Systems
         public ImmutableArray<T> Get<T>() where T : IComponent
         {
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T)]), $"{typeof(T).Name} isn't filtered by this context !");
-
-            return (ImmutableArray<T>)(object)Components[typeof(T)];
+            
+            return Components[typeof(T)].Cast<T>().ToImmutableArray();
         }
 
         public ImmutableArray<(T1 First, T2 Second)> Get<T1, T2>()

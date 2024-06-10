@@ -31,12 +31,10 @@ namespace Ignite
 
         internal ImmutableArray<Type> Systems;
 
-        public Subworld([DisallowNull]World source, [DisallowNull]Ignite.Node from)
+        public Subworld([DisallowNull]Ignite.Node from)
         {
-            Debug.Assert(from.World != source, $"The target node world is valid fot the creation of this subworld !");
-
             Root = new(from);
-            Systems = GetAllRequiredSystems(source);
+            Systems = GetAllRequiredSystems(from.World);
         }
 
         private ImmutableHashSet<int> GetAllComponentsIndex(Node node)
