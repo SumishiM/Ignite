@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Ignite.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
     public class FilterComponentAttribute : Attribute
     {
         /// <summary>

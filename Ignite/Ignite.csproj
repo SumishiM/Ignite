@@ -11,6 +11,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<BaseOutputPath>..\Binary\$(AssemblyName)\</BaseOutputPath>
 		<BaseIntermediateOutputPath>..\Bin-Intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
+		<DefineConstants>$(DefineConstants);IGNITE</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
