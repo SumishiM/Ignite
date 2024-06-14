@@ -298,7 +298,7 @@ namespace Ignite.Systems
         public ImmutableArray<T> Get<T>() where T : IComponent
         {
             Debug.Assert(FilteredComponents.Contains(_lookup[typeof(T)]), $"{typeof(T).Name} isn't filtered by this context !");
-            
+
             return Components[typeof(T)].Cast<T>().ToImmutableArray();
         }
 
@@ -388,7 +388,10 @@ namespace Ignite.Systems
                     // may not be optimize but do the work
                     foreach (var index in FilteredComponents)
                     {
-                        _components[index].TryAdd(node.Id, node.Components[index]);
+                        if (node.Components.TryGetValue(index, out var component))
+                        {
+                            _components[index].TryAdd(node.Id, component);
+                        }
                     }
 
                     _cachedComponents = null;
