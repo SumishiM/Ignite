@@ -192,7 +192,10 @@ namespace Ignite
                 return this;
 
             if (Activator.CreateInstance(type) is IComponent component)
+            {
+                type.GetConstructor([])?.Invoke(component, null);
                 return AddComponent(type, ref component);
+            }
 
             throw new Exception($"Cannot add component {type}");
         }
@@ -244,9 +247,12 @@ namespace Ignite
                 $"Why are we trying to add/replace a component with a type that isn't a component ?");
 
             if (Activator.CreateInstance(type) is IComponent component)
+            {
+                type.GetConstructor([])?.Invoke(component, null);
                 return AddOrReplaceComponent(ref component);
+            }
             // should never execute !!!
-            throw new Exception($"Unable to add a component of type {type}");
+            throw new Exception($"Unable to add a component of type {type} !");
         }
 
         /// <summary>
@@ -258,15 +264,17 @@ namespace Ignite
             int index = _lookup[component.GetType()];
             if (Components.ContainsKey(index))
             {
-                Components[index] = component;
+                AddRequiredComponents(component);
 
+                Components[index] = component;
                 //OnComponentReplaced?.Invoke(this, index, component);
 
                 return this;
             }
 
-            Components[_lookup[component.GetType()]] = component;
+            AddRequiredComponents(component);
 
+            Components[_lookup[component.GetType()]] = component;
             OnComponentAdded?.Invoke(this, _lookup[component]);
 
             return this;

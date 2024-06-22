@@ -51,7 +51,9 @@ namespace Ignite
                     {
                         // need a fix for components using constructors
                         if (Activator.CreateInstance(type, false) is IComponent c)
+                        {
                             _components.Add(c);
+                        }
                     }
                 }
                 else
@@ -105,13 +107,13 @@ namespace Ignite
                 {
                     IComponent component = b._components[i];
                     if (!node.HasComponent(component.GetType()))
-                        node.AddComponent(ref component);
+                        node.AddOrReplaceComponent(ref component);
                 }
 
                 foreach (Type type in b._componentsTypes)
                 {
                     if (!node.HasComponent(type))
-                        node.AddComponent(type);
+                        node.AddOrReplaceComponent(type);
                 }
 
                 b._world.RegisterNode(node);
